@@ -49,7 +49,6 @@ class Plugin:
 
         for token_type, token_str, start_indices, _, line in self._file_tokens:
             line_no = start_indices[0]
-            # XXX print((token_type, token_str, start_indices, line))
 
             if token_type in (tokenize.NEWLINE, tokenize.NL, tokenize.INDENT):
                 is_comment_prefix = True
@@ -70,10 +69,10 @@ class Plugin:
             # encountered a hash comment that is a docstring
             elif (
                 token_type == tokenize.COMMENT
+                and is_comment_prefix
                 and last_stmt_line_no is not None
                 and last_stmt_line_no + 1 == line_no
             ):
                 yield line_no
 
-            # grouped tokens will no longer be a comment's prefix if they aren't new lines or indents (earlier clause)
             is_comment_prefix = False

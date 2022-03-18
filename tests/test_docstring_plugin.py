@@ -42,6 +42,11 @@ def foo(x, y):
     return x + y
 """
 
+FUNC_DOC_STRING_INLINE_HASH = """
+def foo(x, y):
+    return x + y # Don't complain about me
+"""
+
 METHOD_DOC_STRING_TRIPLE_DOUBLE_QUOTES = '''
 class Bar:
     def __init__(self, x):
@@ -131,6 +136,11 @@ class TestFuncDocStrings(DocStringTesterBaseClass):
         assert len(errors) == 1
         assert errors[0][0] == 3  # error line no
         assert errors[0][2] == ROU100
+
+    def test_correct_inline_hash(self):
+        errors = self.get_plugin_errors(FUNC_DOC_STRING_INLINE_HASH)
+
+        assert len(errors) == 0
 
 
 class TestMethodDocStrings(DocStringTesterBaseClass):
