@@ -1,0 +1,43 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: check-json
+      - id: check-yaml
+      - id: check-xml
+      - id: debug-statements
+      - id: end-of-file-fixer
+      - id: fix-encoding-pragma
+        args: ['--remove']
+      - id: requirements-txt-fixer
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.31.1
+    hooks:
+      - id: pyupgrade
+        args: ['--py38-plus', '--keep-mock']
+
+  - repo: https://github.com/timothycrosley/isort
+    rev: 5.10.1
+    hooks:
+      - id: isort
+        additional_dependencies:
+          - 'toml'
+
+  - repo: https://github.com/PyCQA/pydocstyle
+    rev: 6.1.1
+    hooks:
+      - id: pydocstyle
+        args: ['--add-ignore=D100,D101,D102,D103,D104,D105,D106,D107']
+
+  - repo: https://github.com/psf/black
+    rev: 22.1.0
+    hooks:
+      - id: black
+        language_version: python3.8
+
+
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 4.0.1
+    hooks:
+      - id: flake8

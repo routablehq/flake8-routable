@@ -1,10 +1,11 @@
+# Python imports
 import ast
 import io
 import tokenize
 
-import pytest
-
+# Internal imports
 from flake8_routable import ROU100, Plugin
+
 
 CLASS_DOC_STRING_TRIPLE_DOUBLE_QUOTES = '''
 class Foo:
@@ -68,6 +69,7 @@ class DocStringTesterBaseClass:
     def get_plugin_errors(self, file_str):
         """
         With a string representing a file...
+
             1. build an AST,
             2. tokenize,
             3. run the flake8 docstring format plugin, and
