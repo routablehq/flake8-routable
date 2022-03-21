@@ -1,8 +1,6 @@
 # Python imports
-import ast
 import importlib.metadata as importlib_metadata
 import tokenize
-from itertools import chain
 from typing import Generator, List, Tuple, Type
 
 
@@ -12,16 +10,6 @@ DOCSTRING_STMT_TYPES = (
 )
 
 ROU100 = "ROU100 Use triple double quotes for docstrings"
-ROU101 = "ROU101 Import from a tests directory"
-
-
-class Visitor(ast.NodeVisitor):
-    def __init__(self) -> None:
-        self.errors = []
-
-    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
-        if node.module is not None and "tests" in node.module:
-            self.errors.append((node.lineno, node.col_offset, ROU101))
 
 
 class Plugin:
@@ -35,12 +23,7 @@ class Plugin:
         self._tree = tree
 
     def run(self) -> Generator[Tuple[int, int, str, Type["Plugin"]], None, None]:
-        visitor = Visitor()
-        visitor.visit(self._tree)
-
-        errors = chain(self._lines_with_invalid_docstrings(), visitor.errors)
-
-        for line_no in errors:
+        for line_no in self._lines_with_invalid_docstrings():
             yield line_no, 0, ROU100, type(self)
 
     def _lines_with_invalid_docstrings(self) -> Generator[int, None, None]:
