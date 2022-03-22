@@ -1,38 +1,48 @@
+# Python imports
 import ast
-import sys
+import importlib.metadata as importlib_metadata
 import tokenize
+from itertools import chain
 from typing import Generator, List, Tuple, Type
 
-if sys.version_info < (3, 8):
-    import importlib_metadata
-else:
-    import importlib.metadata as importlib_metadata
 
 DOCSTRING_STMT_TYPES = (
     "class",
     "def",
 )
 
-ROU100 = "ROU100 Use triple double quotes for docstrings"
+# Note: The rule should be what is wrong, not how to fix it
+ROU100 = "ROU100 Triple double quotes not used for docstring"
+ROU101 = "ROU101 Import from a tests directory"
 
 
-class Plugin:
-    """Flake8 plugin to find doc strings defined with invalid characters."""
+class Visitor(ast.NodeVisitor):
+    """Linting errors that use the AST."""
 
-    name = __name__
-    version = importlib_metadata.version(__name__)
+    def __init__(self) -> None:
+        self.errors = []
 
-    def __init__(self, tree, file_tokens: List[tokenize.TokenInfo]) -> None:
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+        if node.module is not None and "tests" in node.module:
+            self.errors.append((node.lineno, node.col_offset, ROU101))
+
+
+class FileTokenHelper:
+    """Linting errors that use file tokens."""
+
+    def __init__(self) -> None:
+        self.errors = []
+        self._file_tokens = []
+
+    def vist(self, file_tokens: List[tokenize.TokenInfo]) -> None:
         self._file_tokens = file_tokens
-        self._tree = tree
 
-    def run(self) -> Generator[Tuple[int, int, str, Type["Plugin"]], None, None]:
-        for line_no in self._lines_with_invalid_docstrings():
-            yield line_no, 0, ROU100, type(self)
+        # run methods that generate errors using file tokens
+        self.lines_with_invalid_docstrings()
 
-    def _lines_with_invalid_docstrings(self) -> Generator[int, None, None]:
+    def lines_with_invalid_docstrings(self) -> None:
         """
-        Yields the physical line number of a docstring commented without triple-double-quotes.
+        Yield the physical line number of a docstring commented without triple-double-quotes.
 
         This applies to class, function, and method statements.
 
@@ -43,7 +53,6 @@ class Plugin:
         Comments can happen on code immediately following a statement definition but this is
         rare, unusual, and most likely warranting the inclusion of a docstring.
         """
-
         is_comment_prefix = False
         last_stmt_line_no = None
 
@@ -63,17 +72,34 @@ class Plugin:
                     and last_stmt_line_no + 1 == line_no
                     and line.strip().startswith("'''")
                 ):
-                    yield line_no
+                    self.errors.append((*start_indices, ROU100))
             # encountered a statement declaration, save its line number
             elif token_type == tokenize.NAME and token_str in DOCSTRING_STMT_TYPES:
                 last_stmt_line_no = line_no
             # encountered a hash comment that is a docstring
-            elif (
-                token_type == tokenize.COMMENT
-                and last_stmt_line_no is not None
-                and last_stmt_line_no + 1 == line_no
-            ):
-                yield line_no
+            elif token_type == tokenize.COMMENT and last_stmt_line_no is not None and last_stmt_line_no + 1 == line_no:
+                self.errors.append((*start_indices, ROU100))
 
             # grouped tokens will no longer be a comment's prefix if they aren't new lines or indents (earlier clause)
             is_comment_prefix = False
+
+
+class Plugin:
+    """Flake8 plugin for Routable's best coding practices."""
+
+    name = __name__
+    version = importlib_metadata.version(__name__)
+
+    def __init__(self, tree, file_tokens: List[tokenize.TokenInfo]) -> None:
+        self._file_tokens = file_tokens
+        self._tree = tree
+
+    def run(self) -> Generator[Tuple[int, int, str, Type["Plugin"]], None, None]:
+        visitor = Visitor()
+        visitor.visit(self._tree)
+
+        file_token_helper = FileTokenHelper()
+        file_token_helper.vist(self._file_tokens)
+
+        for line, col, msg in chain(visitor.errors, file_token_helper.errors):
+            yield line, col, msg, type(self)
