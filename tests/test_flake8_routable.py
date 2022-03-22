@@ -90,17 +90,17 @@ class Bar:
     @pytest.mark.parametrize("doc_string", (CLASS_DOC_STRING_TRIPLE_SINGLE_QUOTES, CLASS_DOC_STRING_HASH))
     def test_incorrect_docstring_class(self, doc_string):
         errors = results(doc_string)
-        assert errors == {"3:4: ROU100 Use triple double quotes for docstrings"}
+        assert errors == {"3:4: ROU100 Triple double quotes not used for docstring"}
 
     @pytest.mark.parametrize("doc_string", (FUNC_DOC_STRING_TRIPLE_SINGLE_QUOTES, FUNC_DOC_STRING_HASH))
     def test_incorrect_docstring_function(self, doc_string):
         errors = results(doc_string)
-        assert errors == {"3:4: ROU100 Use triple double quotes for docstrings"}
+        assert errors == {"3:4: ROU100 Triple double quotes not used for docstring"}
 
     @pytest.mark.parametrize("doc_string", (METHOD_DOC_STRING_TRIPLE_SINGLE_QUOTES, METHOD_DOC_STRING_HASH))
     def test_incorrect_docstring_method(self, doc_string):
         errors = results(doc_string)
-        assert errors == {"4:8: ROU100 Use triple double quotes for docstrings"}
+        assert errors == {"4:8: ROU100 Triple double quotes not used for docstring"}
 
 
 class TestROU101:

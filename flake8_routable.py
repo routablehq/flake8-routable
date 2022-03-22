@@ -11,7 +11,7 @@ DOCSTRING_STMT_TYPES = (
     "def",
 )
 
-ROU100 = "ROU100 Use triple double quotes for docstrings"
+ROU100 = "ROU100 Triple double quotes not used for docstring"
 ROU101 = "ROU101 Import from a tests directory"
 
 
