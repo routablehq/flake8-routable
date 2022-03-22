@@ -11,6 +11,7 @@ There are a lot of other Flake8 plugins already created by the Python community.
 
 Here is a list of the rules supported by this Flake8 plugin:
 * ROU100 - Doc strings must be formatted with triple-double-quotes
+* ROU101 - Import from a tests directory
 
 ## Testing
 
