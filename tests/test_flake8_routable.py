@@ -197,3 +197,7 @@ class TestROU104:
     def test_correct_blank_line_after_comment(self):
         errors = results("# Setup\n\nUser = get_user_model()\n")
         assert errors == set()
+
+    def test_correct_blank_lines_after_section(self):
+        errors = results("# -------\n# Tests\n# -------\n\n\nX = 4")
+        assert errors == set()

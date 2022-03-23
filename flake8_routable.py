@@ -12,6 +12,7 @@ DOCSTRING_STMT_TYPES = (
 )
 
 MAX_BLANK_LINES_AFTER_COMMENT = 2
+SECTION_COMMENT_START = "# --"
 
 # Note: The rule should be what is wrong, not how to fix it
 ROU100 = "ROU100 Triple double quotes not used for docstring"
@@ -50,8 +51,8 @@ class FileTokenHelper:
         """Comments should not have more than one blank line after them."""
         blank_lines_after_comment = None  # None until we hit a comment, then it's 0
 
-        for token_type, _, start_indices, _, _ in self._file_tokens:
-            if token_type == tokenize.COMMENT:
+        for token_type, token_str, start_indices, _, _ in self._file_tokens:
+            if token_type == tokenize.COMMENT and not token_str.startswith(SECTION_COMMENT_START):
                 blank_lines_after_comment = 0
             elif token_type == tokenize.NL and blank_lines_after_comment is not None:
                 blank_lines_after_comment += 1
