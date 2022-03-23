@@ -18,7 +18,7 @@ SECTION_COMMENT_START = "# --"
 ROU100 = "ROU100 Triple double quotes not used for docstring"
 ROU101 = "ROU101 Import from a tests directory"
 ROU102 = "ROU102 Strings should not span multiple lines except comments or docstrings"
-ROU104 = "ROU104 Multiple blank lines are not allowed after a comment"
+ROU104 = "ROU104 Multiple blank lines are not allowed after a non-section comment"
 
 
 class Visitor(ast.NodeVisitor):
@@ -48,7 +48,15 @@ class FileTokenHelper:
         self.lines_with_invalid_multi_line_strings()
 
     def lines_with_blank_lines_after_comments(self) -> None:
-        """Comments should not have more than one blank line after them."""
+        """
+        Comments should not have more than one blank line after them.
+
+        The exception to this rule is if a comment is a section comment like so:
+
+        # -----------------
+        # Section Comment
+        # -----------------
+        """
         blank_lines_after_comment = None  # None until we hit a comment, then it's 0
 
         for token_type, token_str, start_indices, _, _ in self._file_tokens:

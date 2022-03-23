@@ -192,7 +192,7 @@ class TestROU102:
 class TestROU104:
     def test_incorrect_blank_lines_after_comment(self):
         errors = results("# Setup\n\n\nUser = get_user_model()\n")
-        assert errors == {"3:0: ROU104 Multiple blank lines are not allowed after a comment"}
+        assert errors == {"3:0: ROU104 Multiple blank lines are not allowed after a non-section comment"}
 
     def test_correct_blank_line_after_comment(self):
         errors = results("# Setup\n\nUser = get_user_model()\n")
