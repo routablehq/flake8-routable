@@ -3,15 +3,17 @@ Custom Flake8 plugins for Routable
 
 ## Contributing
 
-**Please read before contributing to this repo.**
+### Please Read
 
 There are a lot of other Flake8 plugins already created by the Python community. Do your research and see if a plugin already exists before you build a new one.
 
 The Python environment used is `3.8.10`.
 
-Before committing your code to this repo please run:
-1. `black` and
-2. `flake8`.
+### First Time Setup
+
+Before committing code for the first time run:
+1. `pip install -r requirements-dev.txt` and
+2. `pre-commit install`
 
 ## Rules
 
