@@ -3,15 +3,24 @@ Custom Flake8 plugins for Routable
 
 ## Contributing
 
-**Please read before contributing to this repo.**
+### Please Read
 
 There are a lot of other Flake8 plugins already created by the Python community. Do your research and see if a plugin already exists before you build a new one.
+
+The Python environment used is `3.8.10`.
+
+### First Time Setup
+
+Before committing code for the first time run:
+1. `pip install -r requirements-dev.txt` and
+2. `pre-commit install`
 
 ## Rules
 
 Here is a list of the rules supported by this Flake8 plugin:
-* ROU100 - Triple double quotes not used for docstring
-* ROU101 - Import from a tests directory
+* `ROU100` - Triple double quotes not used for docstring
+* `ROU101` - Import from a tests directory
+* `ROU102` - Strings should not span multiple lines except comments or docstrings
 
 ## Testing
 
