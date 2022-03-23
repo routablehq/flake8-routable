@@ -186,4 +186,4 @@ class TestROU102:
 
     def test_incorrect_multi_line_string(self):
         errors = results(self.INVALID_MULTI_LINE_STRING)
-        assert errors == {"3:11: ROU102 Strings should not span multiple lines unless comments or docstrings"}
+        assert errors == {"3:11: ROU102 Strings should not span multiple lines except comments or docstrings"}
