@@ -11,10 +11,13 @@ DOCSTRING_STMT_TYPES = (
     "def",
 )
 
+MAX_BLANK_LINES_AFTER_COMMENT = 2
+
 # Note: The rule should be what is wrong, not how to fix it
 ROU100 = "ROU100 Triple double quotes not used for docstring"
 ROU101 = "ROU101 Import from a tests directory"
 ROU102 = "ROU102 Strings should not span multiple lines except comments or docstrings"
+ROU104 = "ROU104 Multiple blank lines are not allowed after a comment"
 
 
 class Visitor(ast.NodeVisitor):
@@ -39,8 +42,25 @@ class FileTokenHelper:
         self._file_tokens = file_tokens
 
         # run methods that generate errors using file tokens
+        self.lines_with_blank_lines_after_comments()
         self.lines_with_invalid_docstrings()
         self.lines_with_invalid_multi_line_strings()
+
+    def lines_with_blank_lines_after_comments(self) -> None:
+        """Comments should not have more than one blank line after them."""
+        blank_lines_after_comment = None  # None until we hit a comment, then it's 0
+
+        for token_type, _, start_indices, _, _ in self._file_tokens:
+            if token_type == tokenize.COMMENT:
+                blank_lines_after_comment = 0
+            elif token_type == tokenize.NL and blank_lines_after_comment is not None:
+                blank_lines_after_comment += 1
+            else:  # counting stops when we're not analyzing NLs related to a comment or a comment
+                blank_lines_after_comment = None
+
+            if (blank_lines_after_comment or 0) > MAX_BLANK_LINES_AFTER_COMMENT:
+                self.errors.append((*start_indices, ROU104))
+                blank_lines_after_comment = None
 
     def lines_with_invalid_multi_line_strings(self) -> None:
         """

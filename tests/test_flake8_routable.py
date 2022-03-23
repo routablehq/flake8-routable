@@ -187,3 +187,13 @@ class TestROU102:
     def test_incorrect_multi_line_string(self):
         errors = results(self.INVALID_MULTI_LINE_STRING)
         assert errors == {"3:11: ROU102 Strings should not span multiple lines except comments or docstrings"}
+
+
+class TestROU104:
+    def test_incorrect_blank_lines_after_comment(self):
+        errors = results("# Setup\n\n\nUser = get_user_model()\n")
+        assert errors == {"3:0: ROU104 Multiple blank lines are not allowed after a comment"}
+
+    def test_correct_blank_line_after_comment(self):
+        errors = results("# Setup\n\nUser = get_user_model()\n")
+        assert errors == set()
