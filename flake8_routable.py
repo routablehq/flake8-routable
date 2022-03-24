@@ -3,7 +3,7 @@ import ast
 import importlib.metadata as importlib_metadata
 import tokenize
 from itertools import chain
-from typing import Generator, List, Tuple, Type
+from typing import Any, Generator, List, Tuple, Type, Union
 
 
 DOCSTRING_STMT_TYPES = (
@@ -15,6 +15,8 @@ DOCSTRING_STMT_TYPES = (
 ROU100 = "ROU100 Triple double quotes not used for docstring"
 ROU101 = "ROU101 Import from a tests directory"
 ROU102 = "ROU102 Strings should not span multiple lines except comments or docstrings"
+ROU103 = "ROU103 Object does not have attributes in order"
+ROU200 = "ROU200 Could not parse"
 
 
 class Visitor(ast.NodeVisitor):
@@ -23,9 +25,46 @@ class Visitor(ast.NodeVisitor):
     def __init__(self) -> None:
         self.errors = []
 
+    def _is_ordered(self, values: List[Any]) -> bool:
+        stringify = [self._parse_to_string(value).lower() for value in values]
+        return sorted(stringify) == stringify
+
+    def _parse_Attribute(self, node: Union[ast.Attribute, ast.Name], s="") -> str:
+        if isinstance(node, ast.Attribute):
+            return self._parse_Attribute(node.value, s=f".{node.attr}{s}")
+        return f"{self._parse_to_string(node)}{s}"
+
+    def _parse_to_string(self, node):
+        if isinstance(node, ast.Attribute):
+            value = self._parse_Attribute(node)
+        elif isinstance(node, ast.Call):
+            value = self._parse_to_string(node.func)
+        elif isinstance(node, ast.Constant):
+            value = node.value
+        elif isinstance(node, ast.Name):
+            value = node.id
+        elif isinstance(node, ast.JoinedStr):
+            value = "".join([self._parse_to_string(value) for value in node.values])
+        elif isinstance(node, ast.Tuple):
+            value = "".join([self._parse_to_string(elt) for elt in node.elts])
+        elif hasattr(node, "value"):
+            value = self._parse_to_string(node.value)
+        else:
+            self.errors.append((node.lineno, node.col_offset, f"ROU200 could not parse {type(node)}"))
+            return ""
+        return str(value)
+
+    def visit_Dict(self, node: ast.Dict) -> None:
+        if None not in node.keys and not self._is_ordered(node.keys):
+            self.errors.append((node.lineno, node.col_offset, ROU103))
+
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         if node.module is not None and "tests" in node.module:
             self.errors.append((node.lineno, node.col_offset, ROU101))
+
+    def visit_Set(self, node: ast.Set) -> None:
+        if not self._is_ordered(node.elts):
+            self.errors.append((node.lineno, node.col_offset, ROU103))
 
 
 class FileTokenHelper:
