@@ -193,7 +193,20 @@ class TestROU104:
     BLANK_LINE_AFTER_COMMENT = "# Setup\n\nUser = get_user_model()\n"
     BLANK_LINES_AFTER_SECTION = "# -------\n# Tests\n# -------\n\n\nX = 4"
     BLANK_LINES_BEFORE_DEDENT_STATEMENT = (
-        "class Foo:\n" "    X = 4\n" "\n" "    # Class Methods\n" "\n" "\n" "class Bar:\n" "    pass\n"
+        "class FeatureFlagModelSerializer(serializers.ModelSerializer):\n"
+        '    """FeatureFlag model serializer."""\n\n'
+        "    class Meta:\n"
+        "        model = FeatureFlag\n"
+        '        fields = ["feature_flag"]\n\n'
+        "    # Special method overrides\n\n"
+        "    # Private methods\n\n"
+        "    # Class methods\n\n"
+        "    # Properties\n\n"
+        "    # Overrides\n\n"
+        "    # Validation\n\n"
+        "    # Methods\n\n\n"
+        "class FeatureSettingSerializer(NoCreateUpdateMixin, serializers.Serializer):\n"
+        "    pass\n"
     )
 
     def test_incorrect_blank_lines_after_comment(self):

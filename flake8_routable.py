@@ -63,8 +63,11 @@ class FileTokenHelper:
         for i, (token_type, token_str, start_indices, _, _) in enumerate(self._file_tokens):
             do_reset_conditions = False
 
+            # Dedenting in progress
+            if conditions[4] and not conditions[5] and token_type == tokenize.DEDENT:
+                continue
             # Condition 6: Not a class or function statement after dedent
-            if conditions[4] and (token_type != tokenize.NAME or token_str not in CLASS_AND_FUNC_TOKENS):
+            elif conditions[4] and (token_type != tokenize.NAME or token_str not in CLASS_AND_FUNC_TOKENS):
                 conditions[5] = True
             elif conditions[3] and not conditions[4]:
                 # Condition 5a: A dedent
