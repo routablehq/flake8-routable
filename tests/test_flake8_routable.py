@@ -190,14 +190,24 @@ class TestROU102:
 
 
 class TestROU104:
+    BLANK_LINE_AFTER_COMMENT = "# Setup\n\nUser = get_user_model()\n"
+    BLANK_LINES_AFTER_SECTION = "# -------\n# Tests\n# -------\n\n\nX = 4"
+    BLANK_LINES_BEFORE_DEDENT_STATEMENT = (
+        "class Foo:\n" "    X = 4\n" "\n" "    # Class Methods\n" "\n" "\n" "class Bar:\n" "    pass\n"
+    )
+
     def test_incorrect_blank_lines_after_comment(self):
         errors = results("# Setup\n\n\nUser = get_user_model()\n")
         assert errors == {"3:0: ROU104 Multiple blank lines are not allowed after a non-section comment"}
 
-    def test_correct_blank_line_after_comment(self):
-        errors = results("# Setup\n\nUser = get_user_model()\n")
-        assert errors == set()
-
-    def test_correct_blank_lines_after_section(self):
-        errors = results("# -------\n# Tests\n# -------\n\n\nX = 4")
+    @pytest.mark.parametrize(
+        "blank_lines_string",
+        (
+            BLANK_LINE_AFTER_COMMENT,
+            BLANK_LINES_AFTER_SECTION,
+            BLANK_LINES_BEFORE_DEDENT_STATEMENT,
+        ),
+    )
+    def test_correct_blank_lines(self, blank_lines_string):
+        errors = results(blank_lines_string)
         assert errors == set()
