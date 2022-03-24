@@ -66,8 +66,12 @@ class FileTokenHelper:
             # Dedenting in progress
             if conditions[4] and not conditions[5] and token_type == tokenize.DEDENT:
                 continue
-            # Condition 6: Not a class or function statement after dedent
-            elif conditions[4] and (token_type != tokenize.NAME or token_str not in CLASS_AND_FUNC_TOKENS):
+            # Condition 6: Not a class/function statement or statement decorator after dedent
+            elif (
+                conditions[4]
+                and not (token_type == tokenize.NAME and token_str in CLASS_AND_FUNC_TOKENS)
+                and not (token_type == tokenize.OP and token_str == "@")
+            ):
                 conditions[5] = True
             elif conditions[3] and not conditions[4]:
                 # Condition 5a: A dedent

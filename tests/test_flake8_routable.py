@@ -205,6 +205,7 @@ class TestROU104:
         "    # Overrides\n\n"
         "    # Validation\n\n"
         "    # Methods\n\n\n"
+        "@spicy_decorator\n"
         "class FeatureSettingSerializer(NoCreateUpdateMixin, serializers.Serializer):\n"
         "    pass\n"
     )
