@@ -2,6 +2,7 @@
 import ast
 import importlib.metadata as importlib_metadata
 import tokenize
+from dataclasses import dataclass
 from itertools import chain
 from typing import Generator, List, Tuple, Type
 
@@ -19,6 +20,45 @@ ROU100 = "ROU100 Triple double quotes not used for docstring"
 ROU101 = "ROU101 Import from a tests directory"
 ROU102 = "ROU102 Strings should not span multiple lines except comments or docstrings"
 ROU104 = "ROU104 Multiple blank lines are not allowed after a non-section comment"
+
+
+@dataclass
+class BlankLinesAfterCommentConditions:
+    # Comment that is not a section comment
+    condition1: bool = False
+
+    # New line after comment
+    condition2: bool = False
+
+    # Another new line after comment
+    condition3: bool = False
+
+    # Another new line after comment
+    condition4: bool = False
+
+    # Not a dedent
+    condition5: bool = False
+
+    # Not a class/function statement or statement decorator after dedent
+    condition6: bool = False
+
+    def is_all_passed(self):
+        return (
+            self.condition1
+            and self.condition2
+            and self.condition3
+            and self.condition4
+            and self.condition5
+            and self.condition6
+        )
+
+    def reset(self):
+        self.condition1 = BlankLinesAfterCommentConditions.condition1
+        self.condition2 = BlankLinesAfterCommentConditions.condition2
+        self.condition3 = BlankLinesAfterCommentConditions.condition3
+        self.condition4 = BlankLinesAfterCommentConditions.condition4
+        self.condition5 = BlankLinesAfterCommentConditions.condition5
+        self.condition6 = BlankLinesAfterCommentConditions.condition6
 
 
 class Visitor(ast.NodeVisitor):
@@ -58,55 +98,57 @@ class FileTokenHelper:
         """
         # A bit array representing all the conditions it takes for an error to be found
         # (see inline comments below on conditions)
-        conditions = [False, False, False, False, False, False]
+        conditions = BlankLinesAfterCommentConditions()
 
         for i, (token_type, token_str, start_indices, _, _) in enumerate(self._file_tokens):
             do_reset_conditions = False
 
             # Dedenting in progress
-            if conditions[4] and not conditions[5] and token_type == tokenize.DEDENT:
+            if conditions.condition5 and not conditions.condition6 and token_type == tokenize.DEDENT:
                 continue
             # Condition 6: Not a class/function statement or statement decorator after dedent
             elif (
-                conditions[4]
+                conditions.condition5
                 and not (token_type == tokenize.NAME and token_str in CLASS_AND_FUNC_TOKENS)
                 and not (token_type == tokenize.OP and token_str == "@")
             ):
-                conditions[5] = True
-            elif conditions[3] and not conditions[4]:
+                conditions.condition6 = True
+            elif conditions.condition4 and not conditions.condition5:
                 # Condition 5a: A dedent
                 if token_type == tokenize.DEDENT:
-                    conditions[4] = True
+                    conditions.condition5 = True
                 # Condition 5b: Not a dedent, this meets enough conditions to be an error
                 else:
-                    conditions[4] = True
-                    conditions[5] = True
+                    conditions.condition5 = True
+                    conditions.condition6 = True
 
                     # we want to use previous start_indices where the double new-line was found
                     start_indices = self._file_tokens[i - 1][2]
             # Condition 4: Another new line after comment
-            elif conditions[2] and not conditions[3] and token_type == tokenize.NL:
-                conditions[3] = True
+            elif conditions.condition3 and not conditions.condition4 and token_type == tokenize.NL:
+                conditions.condition4 = True
             # Condition 3: Another new line after comment
-            elif conditions[1] and not conditions[2] and token_type == tokenize.NL:
-                conditions[2] = True
+            elif conditions.condition2 and not conditions.condition3 and token_type == tokenize.NL:
+                conditions.condition3 = True
             # Condition 2: New line after comment
-            elif conditions[0] and not conditions[1] and token_type == tokenize.NL:
-                conditions[1] = True
+            elif conditions.condition1 and not conditions.condition2 and token_type == tokenize.NL:
+                conditions.condition2 = True
             # Condition 1: Comment that is not a section comment
             elif (
-                not conditions[0] and token_type == tokenize.COMMENT and not token_str.startswith(SECTION_COMMENT_START)
+                not conditions.condition1
+                and token_type == tokenize.COMMENT
+                and not token_str.startswith(SECTION_COMMENT_START)
             ):
-                conditions[0] = True
+                conditions.condition1 = True
             else:
                 do_reset_conditions = True
 
-            if all(conditions):
+            if conditions.is_all_passed():
                 do_reset_conditions = True
                 self.errors.append((*start_indices, ROU104))
 
             if do_reset_conditions:
-                conditions = [False, False, False, False, False, False]
+                conditions.reset()
 
     def lines_with_invalid_multi_line_strings(self) -> None:
         """
