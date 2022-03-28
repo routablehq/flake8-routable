@@ -25,40 +25,32 @@ ROU104 = "ROU104 Multiple blank lines are not allowed after a non-section commen
 @dataclass
 class BlankLinesAfterCommentConditions:
     # Comment that is not a section comment
-    condition1: bool = False
+    non_section_comment: bool = False
 
     # New line after comment
-    condition2: bool = False
+    nl1_after_comment: bool = False
 
     # Another new line after comment
-    condition3: bool = False
+    nl2_after_comment: bool = False
 
     # Another new line after comment
-    condition4: bool = False
+    nl3_after_comment: bool = False
 
-    # Not a dedent
-    condition5: bool = False
+    # A dedent
+    dedent: bool = False
 
     # Not a class/function statement or statement decorator after dedent
-    condition6: bool = False
+    not_stmt_or_decorator: bool = False
 
     def is_all_passed(self):
         return (
-            self.condition1
-            and self.condition2
-            and self.condition3
-            and self.condition4
-            and self.condition5
-            and self.condition6
+            self.non_section_comment
+            and self.nl1_after_comment
+            and self.nl2_after_comment
+            and self.nl3_after_comment
+            and self.dedent
+            and self.not_stmt_or_decorator
         )
-
-    def reset(self):
-        self.condition1 = BlankLinesAfterCommentConditions.condition1
-        self.condition2 = BlankLinesAfterCommentConditions.condition2
-        self.condition3 = BlankLinesAfterCommentConditions.condition3
-        self.condition4 = BlankLinesAfterCommentConditions.condition4
-        self.condition5 = BlankLinesAfterCommentConditions.condition5
-        self.condition6 = BlankLinesAfterCommentConditions.condition6
 
 
 class Visitor(ast.NodeVisitor):
@@ -104,42 +96,42 @@ class FileTokenHelper:
             do_reset_conditions = False
 
             # Dedenting in progress
-            if conditions.condition5 and not conditions.condition6 and token_type == tokenize.DEDENT:
+            if conditions.dedent and not conditions.not_stmt_or_decorator and token_type == tokenize.DEDENT:
                 continue
             # Condition 6: Not a class/function statement or statement decorator after dedent
             elif (
-                conditions.condition5
+                conditions.dedent
                 and not (token_type == tokenize.NAME and token_str in CLASS_AND_FUNC_TOKENS)
                 and not (token_type == tokenize.OP and token_str == "@")
             ):
-                conditions.condition6 = True
-            elif conditions.condition4 and not conditions.condition5:
+                conditions.not_stmt_or_decorator = True
+            elif conditions.nl3_after_comment and not conditions.dedent:
                 # Condition 5a: A dedent
                 if token_type == tokenize.DEDENT:
-                    conditions.condition5 = True
+                    conditions.dedent = True
                 # Condition 5b: Not a dedent, this meets enough conditions to be an error
                 else:
-                    conditions.condition5 = True
-                    conditions.condition6 = True
+                    conditions.dedent = True
+                    conditions.not_stmt_or_decorator = True
 
                     # we want to use previous start_indices where the double new-line was found
                     start_indices = self._file_tokens[i - 1][2]
             # Condition 4: Another new line after comment
-            elif conditions.condition3 and not conditions.condition4 and token_type == tokenize.NL:
-                conditions.condition4 = True
+            elif conditions.nl2_after_comment and not conditions.nl3_after_comment and token_type == tokenize.NL:
+                conditions.nl3_after_comment = True
             # Condition 3: Another new line after comment
-            elif conditions.condition2 and not conditions.condition3 and token_type == tokenize.NL:
-                conditions.condition3 = True
+            elif conditions.nl1_after_comment and not conditions.nl2_after_comment and token_type == tokenize.NL:
+                conditions.nl2_after_comment = True
             # Condition 2: New line after comment
-            elif conditions.condition1 and not conditions.condition2 and token_type == tokenize.NL:
-                conditions.condition2 = True
+            elif conditions.non_section_comment and not conditions.nl1_after_comment and token_type == tokenize.NL:
+                conditions.nl1_after_comment = True
             # Condition 1: Comment that is not a section comment
             elif (
-                not conditions.condition1
+                not conditions.non_section_comment
                 and token_type == tokenize.COMMENT
                 and not token_str.startswith(SECTION_COMMENT_START)
             ):
-                conditions.condition1 = True
+                conditions.non_section_comment = True
             else:
                 do_reset_conditions = True
 
@@ -148,7 +140,7 @@ class FileTokenHelper:
                 self.errors.append((*start_indices, ROU104))
 
             if do_reset_conditions:
-                conditions.reset()
+                conditions = BlankLinesAfterCommentConditions()
 
     def lines_with_invalid_multi_line_strings(self) -> None:
         """
