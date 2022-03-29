@@ -187,3 +187,41 @@ class TestROU102:
     def test_incorrect_multi_line_string(self):
         errors = results(self.INVALID_MULTI_LINE_STRING)
         assert errors == {"3:11: ROU102 Strings should not span multiple lines except comments or docstrings"}
+
+
+class TestROU104:
+    BLANK_LINE_AFTER_COMMENT = "# Setup\n\nUser = get_user_model()\n"
+    BLANK_LINES_AFTER_SECTION = "# -------\n# Tests\n# -------\n\n\nX = 4"
+    BLANK_LINES_BEFORE_DEDENT_STATEMENT = (
+        "class FeatureFlagModelSerializer(serializers.ModelSerializer):\n"
+        '    """FeatureFlag model serializer."""\n\n'
+        "    class Meta:\n"
+        "        model = FeatureFlag\n"
+        '        fields = ["feature_flag"]\n\n'
+        "    # Special method overrides\n\n"
+        "    # Private methods\n\n"
+        "    # Class methods\n\n"
+        "    # Properties\n\n"
+        "    # Overrides\n\n"
+        "    # Validation\n\n"
+        "    # Methods\n\n\n"
+        "@spicy_decorator\n"
+        "class FeatureSettingSerializer(NoCreateUpdateMixin, serializers.Serializer):\n"
+        "    pass\n"
+    )
+
+    def test_incorrect_blank_lines_after_comment(self):
+        errors = results("# Setup\n\n\nUser = get_user_model()\n")
+        assert errors == {"3:0: ROU104 Multiple blank lines are not allowed after a non-section comment"}
+
+    @pytest.mark.parametrize(
+        "blank_lines_string",
+        (
+            BLANK_LINE_AFTER_COMMENT,
+            BLANK_LINES_AFTER_SECTION,
+            BLANK_LINES_BEFORE_DEDENT_STATEMENT,
+        ),
+    )
+    def test_correct_blank_lines(self, blank_lines_string):
+        errors = results(blank_lines_string)
+        assert errors == set()

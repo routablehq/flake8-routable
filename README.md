@@ -21,6 +21,7 @@ Here is a list of the rules supported by this Flake8 plugin:
 * `ROU100` - Triple double quotes not used for docstring
 * `ROU101` - Import from a tests directory
 * `ROU102` - Strings should not span multiple lines except comments or docstrings
+* `ROU104` - Multiple blank lines are not allowed after a non-section comment
 
 ## Testing
 
