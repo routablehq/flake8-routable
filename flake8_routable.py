@@ -13,9 +13,12 @@ CLASS_AND_FUNC_TOKENS = (
 )
 
 MAX_BLANK_LINES_AFTER_COMMENT = 2
+
+# comments to ignore, including section headers
 SECTION_COMMENT_STARTS = (
     "# ==",
     "# --",
+    "# 2020-04-06 - Needs review",
 )
 
 # Note: The rule should be what is wrong, not how to fix it

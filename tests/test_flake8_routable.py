@@ -191,6 +191,7 @@ class TestROU102:
 
 class TestROU104:
     BLANK_LINE_AFTER_COMMENT = "# Setup\n\nUser = get_user_model()\n"
+    BLANK_LINES_AFTER_REVIEW_TIMESTAMP = "# 2020-04-06 - Needs review\n\n\nX = 4"
     BLANK_LINES_AFTER_SECTION = "# -------\n# Tests\n# -------\n\n\nX = 4"
     BLANK_LINES_AFTER_SUBSECTION = "# =======\n# Tests\n# =======\n\n\nX = 4"
     BLANK_LINES_BEFORE_DEDENT_STATEMENT = (
@@ -221,6 +222,7 @@ class TestROU104:
             BLANK_LINE_AFTER_COMMENT,
             BLANK_LINES_AFTER_SECTION,
             BLANK_LINES_AFTER_SUBSECTION,
+            BLANK_LINES_AFTER_REVIEW_TIMESTAMP,
             BLANK_LINES_BEFORE_DEDENT_STATEMENT,
         ),
     )
