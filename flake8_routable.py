@@ -13,7 +13,10 @@ CLASS_AND_FUNC_TOKENS = (
 )
 
 MAX_BLANK_LINES_AFTER_COMMENT = 2
-SECTION_COMMENT_START = "# --"
+SECTION_COMMENT_STARTS = (
+    "# ==",
+    "# --",
+)
 
 # Note: The rule should be what is wrong, not how to fix it
 ROU100 = "ROU100 Triple double quotes not used for docstring"
@@ -129,7 +132,7 @@ class FileTokenHelper:
             elif (
                 conditions.section_comment
                 and token_type == tokenize.COMMENT
-                and not token_str.startswith(SECTION_COMMENT_START)
+                and not token_str.startswith(SECTION_COMMENT_STARTS)
             ):
                 conditions.section_comment = False
             else:

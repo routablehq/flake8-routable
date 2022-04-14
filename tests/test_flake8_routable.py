@@ -192,6 +192,7 @@ class TestROU102:
 class TestROU104:
     BLANK_LINE_AFTER_COMMENT = "# Setup\n\nUser = get_user_model()\n"
     BLANK_LINES_AFTER_SECTION = "# -------\n# Tests\n# -------\n\n\nX = 4"
+    BLANK_LINES_AFTER_SUBSECTION = "# =======\n# Tests\n# =======\n\n\nX = 4"
     BLANK_LINES_BEFORE_DEDENT_STATEMENT = (
         "class FeatureFlagModelSerializer(serializers.ModelSerializer):\n"
         '    """FeatureFlag model serializer."""\n\n'
@@ -219,6 +220,7 @@ class TestROU104:
         (
             BLANK_LINE_AFTER_COMMENT,
             BLANK_LINES_AFTER_SECTION,
+            BLANK_LINES_AFTER_SUBSECTION,
             BLANK_LINES_BEFORE_DEDENT_STATEMENT,
         ),
     )
