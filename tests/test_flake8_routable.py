@@ -194,6 +194,25 @@ class TestROU104:
     BLANK_LINES_AFTER_REVIEW_TIMESTAMP = "# 2020-04-06 - Needs review\n\n\nX = 4"
     BLANK_LINES_AFTER_SECTION = "# -------\n# Tests\n# -------\n\n\nX = 4"
     BLANK_LINES_AFTER_SUBSECTION = "# =======\n# Tests\n# =======\n\n\nX = 4"
+    BLANK_LINES_BEFORE_DEDENT_SECTION = (
+        "class AffiliateModelSerializer(serializers.ModelSerializer):\n"
+        '    """Affiliate model serializer."""\n\n'
+        "    # Private attributes\n\n"
+        "    # Fields\n\n"
+        "    # Nested classes\n\n"
+        "    class Meta:\n"
+        "        model = Affiliate\n\n"
+        "        fields = [\n"
+        '            "generic_url",\n'
+        '            "logo",\n'
+        '            "name",\n'
+        '            "primary_color",\n'
+        "        ]\n\n"
+        "    # Methods\n\n\n"
+        "# --------------------\n"
+        "# Main model serializers\n"
+        "# --------------------\n"
+    )
     BLANK_LINES_BEFORE_DEDENT_STATEMENT = (
         "class FeatureFlagModelSerializer(serializers.ModelSerializer):\n"
         '    """FeatureFlag model serializer."""\n\n'
@@ -223,6 +242,7 @@ class TestROU104:
             BLANK_LINES_AFTER_SECTION,
             BLANK_LINES_AFTER_SUBSECTION,
             BLANK_LINES_AFTER_REVIEW_TIMESTAMP,
+            BLANK_LINES_BEFORE_DEDENT_SECTION,
             BLANK_LINES_BEFORE_DEDENT_STATEMENT,
         ),
     )
