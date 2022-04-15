@@ -15,7 +15,7 @@ CLASS_AND_FUNC_TOKENS = (
 MAX_BLANK_LINES_AFTER_COMMENT = 2
 
 # comments to ignore, including section headers
-SECTION_COMMENT_STARTS = (
+IGNORABLE_COMMENTS = (
     "# ==",
     "# --",
     "# 2020-04-06 - Needs review",
@@ -104,7 +104,7 @@ class FileTokenHelper:
             # Dedenting in progress
             if conditions.dedent and conditions.stmt_or_decorator and token_type == tokenize.DEDENT:
                 continue
-            # Condition 6: Not a class/function statement or statement decorator after dedent
+            # Condition 6: Not a class/function statement, statement decorator, or section after dedent
             elif (
                 conditions.dedent
                 and not (token_type == tokenize.NAME and token_str in CLASS_AND_FUNC_TOKENS)
@@ -115,7 +115,10 @@ class FileTokenHelper:
                 # Condition 5a: A dedent
                 if token_type == tokenize.DEDENT:
                     conditions.dedent = True
-                # Condition 5b: Not a dedent, this meets enough conditions to be an error
+                # Condition 5b: Not a dedent, ignorable comment, ignore
+                elif token_type == tokenize.COMMENT and token_str.startswith(IGNORABLE_COMMENTS):
+                    do_reset_conditions = True
+                # Condition 5c: Not a dedent, not an ignorable comment, this meets enough conditions to be an error
                 else:
                     conditions.dedent = True
                     conditions.stmt_or_decorator = False
@@ -135,7 +138,7 @@ class FileTokenHelper:
             elif (
                 conditions.section_comment
                 and token_type == tokenize.COMMENT
-                and not token_str.startswith(SECTION_COMMENT_STARTS)
+                and not token_str.startswith(IGNORABLE_COMMENTS)
             ):
                 conditions.section_comment = False
             else:
