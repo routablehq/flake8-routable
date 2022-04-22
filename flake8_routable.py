@@ -27,6 +27,7 @@ ROU101 = "ROU101 Import from a tests directory"
 ROU102 = "ROU102 Strings should not span multiple lines except comments or docstrings"
 ROU103 = "ROU103 Object does not have attributes in order"
 ROU104 = "ROU104 Multiple blank lines are not allowed after a non-section comment"
+ROU105 = "ROU105 Constants are not in order"
 ROU200 = "ROU200 Could not parse"
 
 
@@ -67,6 +68,14 @@ class Visitor(ast.NodeVisitor):
     def __init__(self) -> None:
         self.errors = []
 
+        self._constant_nodes = []
+        self._last_constant_end_lineno = None
+
+    def _check_constant_order(self, group: List[ast.Assign]):
+        group_strings = [node.targets[0].id.replace("_", " ") for node in group]
+        if sorted(group_strings) != group_strings:
+            self.errors.append((group[0].lineno, group[0].col_offset, ROU105))
+
     def _is_ordered(self, values: List[Any]) -> bool:
         stringify = [self._parse_to_string(value).lower() for value in values]
         return sorted(stringify) == stringify
@@ -95,6 +104,20 @@ class Visitor(ast.NodeVisitor):
             self.errors.append((node.lineno, node.col_offset, f"ROU200 could not parse {type(node)}"))
             return ""
         return str(value)
+
+    def finalize(self):
+        """Run methods after every node has been visited"""
+        self._check_constant_order(self._constant_nodes)
+
+    def visit_Assign(self, node: ast.Assign) -> Any:
+        target = node.targets[0]
+        if isinstance(target, ast.Name) and target.id.isupper():
+            if self._last_constant_end_lineno != node.lineno - 1:
+                self._check_constant_order(self._constant_nodes)
+                self._constant_nodes = []
+
+            self._constant_nodes.append(node)
+            self._last_constant_end_lineno = node.end_lineno
 
     def visit_Dict(self, node: ast.Dict) -> None:
         if None not in node.keys and not self._is_ordered(node.keys):
@@ -291,6 +314,7 @@ class Plugin:
     def run(self) -> Generator[Tuple[int, int, str, Type["Plugin"]], None, None]:
         visitor = Visitor()
         visitor.visit(self._tree)
+        visitor.finalize()
 
         file_token_helper = FileTokenHelper()
         file_token_helper.vist(self._file_tokens)
