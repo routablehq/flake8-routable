@@ -7,7 +7,7 @@ import tokenize
 import pytest
 
 # Internal imports
-from flake8_routable import Plugin
+from flake8_routable import Plugin, Visitor
 
 
 def results(s):
@@ -386,3 +386,10 @@ class TestROU105:
         constants_string = "AB_C=None\nA_BC=None"
         error = results(constants_string)
         assert error == {"1:0: ROU105 Constants are not in order"}
+
+
+class TestVisitor:
+    def test_parse_to_string_warning(self):
+        visitor = Visitor()
+        with pytest.warns(UserWarning):
+            visitor._parse_to_string(None)

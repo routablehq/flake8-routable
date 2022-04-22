@@ -2,6 +2,7 @@
 import ast
 import importlib.metadata as importlib_metadata
 import tokenize
+import warnings
 from dataclasses import dataclass
 from itertools import chain
 from typing import Any, Generator, List, Tuple, Type, Union
@@ -28,7 +29,6 @@ ROU102 = "ROU102 Strings should not span multiple lines except comments or docst
 ROU103 = "ROU103 Object does not have attributes in order"
 ROU104 = "ROU104 Multiple blank lines are not allowed after a non-section comment"
 ROU105 = "ROU105 Constants are not in order"
-ROU200 = "ROU200 Could not parse"
 
 
 @dataclass
@@ -101,7 +101,7 @@ class Visitor(ast.NodeVisitor):
         elif hasattr(node, "value"):
             value = self._parse_to_string(node.value)
         else:
-            self.errors.append((node.lineno, node.col_offset, f"ROU200 could not parse {type(node)}"))
+            warnings.warn(f"Could not parse {type(node)}")
             return ""
         return str(value)
 
