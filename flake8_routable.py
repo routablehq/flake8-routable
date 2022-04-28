@@ -2,9 +2,10 @@
 import ast
 import importlib.metadata as importlib_metadata
 import tokenize
+import warnings
 from dataclasses import dataclass
 from itertools import chain
-from typing import Generator, List, Tuple, Type
+from typing import Any, Generator, List, Tuple, Type, Union
 
 
 CLASS_AND_FUNC_TOKENS = (
@@ -25,7 +26,9 @@ IGNORABLE_COMMENTS = (
 ROU100 = "ROU100 Triple double quotes not used for docstring"
 ROU101 = "ROU101 Import from a tests directory"
 ROU102 = "ROU102 Strings should not span multiple lines except comments or docstrings"
+ROU103 = "ROU103 Object does not have attributes in order"
 ROU104 = "ROU104 Multiple blank lines are not allowed after a non-section comment"
+ROU105 = "ROU105 Constants are not in order"
 
 
 @dataclass
@@ -65,9 +68,68 @@ class Visitor(ast.NodeVisitor):
     def __init__(self) -> None:
         self.errors = []
 
+        self._constant_nodes = []
+        self._last_constant_end_lineno = None
+
+    def _check_constant_order(self, group: List[ast.Assign]):
+        group_strings = [node.targets[0].id.replace("_", " ") for node in group]
+        if sorted(group_strings) != group_strings:
+            self.errors.append((group[0].lineno, group[0].col_offset, ROU105))
+
+    def _is_ordered(self, values: List[Any]) -> bool:
+        stringify = [self._parse_to_string(value).lower() for value in values]
+        return sorted(stringify) == stringify
+
+    def _parse_Attribute(self, node: Union[ast.Attribute, ast.Name], s="") -> str:
+        if isinstance(node, ast.Attribute):
+            return self._parse_Attribute(node.value, s=f".{node.attr}{s}")
+        return f"{self._parse_to_string(node)}{s}"
+
+    def _parse_to_string(self, node):
+        if isinstance(node, ast.Attribute):
+            value = self._parse_Attribute(node)
+        elif isinstance(node, ast.Call):
+            value = self._parse_to_string(node.func)
+        elif isinstance(node, ast.Constant):
+            value = node.value
+        elif isinstance(node, ast.Name):
+            value = node.id
+        elif isinstance(node, ast.JoinedStr):
+            value = "".join([self._parse_to_string(value) for value in node.values])
+        elif isinstance(node, ast.Tuple):
+            value = "".join([self._parse_to_string(elt) for elt in node.elts])
+        elif hasattr(node, "value"):
+            value = self._parse_to_string(node.value)
+        else:
+            warnings.warn(f"Could not parse {type(node)}")
+            return ""
+        return str(value)
+
+    def finalize(self):
+        """Run methods after every node has been visited"""
+        self._check_constant_order(self._constant_nodes)
+
+    def visit_Assign(self, node: ast.Assign) -> Any:
+        target = node.targets[0]
+        if isinstance(target, ast.Name) and target.id.isupper():
+            if self._last_constant_end_lineno != node.lineno - 1:
+                self._check_constant_order(self._constant_nodes)
+                self._constant_nodes = []
+
+            self._constant_nodes.append(node)
+            self._last_constant_end_lineno = node.end_lineno
+
+    def visit_Dict(self, node: ast.Dict) -> None:
+        if None not in node.keys and not self._is_ordered(node.keys):
+            self.errors.append((node.lineno, node.col_offset, ROU103))
+
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         if node.module is not None and "tests" in node.module:
             self.errors.append((node.lineno, node.col_offset, ROU101))
+
+    def visit_Set(self, node: ast.Set) -> None:
+        if not self._is_ordered(node.elts):
+            self.errors.append((node.lineno, node.col_offset, ROU103))
 
 
 class FileTokenHelper:
@@ -252,6 +314,7 @@ class Plugin:
     def run(self) -> Generator[Tuple[int, int, str, Type["Plugin"]], None, None]:
         visitor = Visitor()
         visitor.visit(self._tree)
+        visitor.finalize()
 
         file_token_helper = FileTokenHelper()
         file_token_helper.vist(self._file_tokens)
