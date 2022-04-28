@@ -365,7 +365,9 @@ class TestROU105:
         error = results(constants_string)
         assert error == {"1:0: ROU105 Constants are not in order", "5:0: ROU105 Constants are not in order"}
 
-    # edge cases
+    # ------------
+    # Edge Cases
+    # ------------
 
     def test_constants_multi_line_assignment_correct(self):
         constants_string = "\n".join(key + " = (\nNone\n)" for key in self.CONSTANTS_CORRECT_ORDER)
