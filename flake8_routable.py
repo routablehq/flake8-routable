@@ -139,7 +139,7 @@ class FileTokenHelper:
         self.errors = []
         self._file_tokens = []
 
-    def vist(self, file_tokens: List[tokenize.TokenInfo]) -> None:
+    def visit(self, file_tokens: List[tokenize.TokenInfo]) -> None:
         self._file_tokens = file_tokens
 
         # run methods that generate errors using file tokens
@@ -317,7 +317,7 @@ class Plugin:
         visitor.finalize()
 
         file_token_helper = FileTokenHelper()
-        file_token_helper.vist(self._file_tokens)
+        file_token_helper.visit(self._file_tokens)
 
         for line, col, msg in chain(visitor.errors, file_token_helper.errors):
             yield line, col, msg, type(self)
