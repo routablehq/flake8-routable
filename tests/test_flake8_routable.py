@@ -390,6 +390,76 @@ class TestROU105:
         assert error == {"1:0: ROU105 Constants are not in order"}
 
 
+class TestROU106:
+    RELATIVE_IMPORT_LEVEL_UP = "from ..constants import FOO"
+    RELATIVE_IMPORT_SAME_LEVEL = "from .constants import FOO"
+
+    @pytest.mark.parametrize(
+        "rel_import",
+        (
+            RELATIVE_IMPORT_LEVEL_UP,
+            RELATIVE_IMPORT_SAME_LEVEL,
+        ),
+    )
+    def test_relative_import(self, rel_import):
+        error = results(rel_import)
+        assert error == {"1:0: ROU106 Relative imports are not allowed"}
+
+    def test_absolute_import(self):
+        error = results("from utils.constants import BAR")
+        assert error == set()
+
+
+class TestROU107:
+    LOWER_IMPORT_FUNCTION = (
+        "def foo():\n" '    """ This is a lovely docstring. """\n' "    x = 4\n" "\n" "    from bar import baz\n"
+    )
+
+    LOWER_IMPORT_METHOD = (
+        "class Foo:\n"
+        "    def foo(self):\n"
+        '        """ This is a lovely docstring. """\n'
+        "        x = 4\n"
+        "\n"
+        "        from bar import baz\n"
+    )
+
+    UPPER_IMPORT_FUNCTION = (
+        "def foo():\n" '    """ This is a lovely docstring. """\n' "    from bar import baz\n" "\n" "    x = 4\n"
+    )
+
+    UPPER_IMPORT_METHOD = (
+        "class Foo:\n"
+        "    def foo(self):\n"
+        '        """ This is a lovely docstring. """\n'
+        "        from bar import baz\n"
+        "\n"
+        "        x = 4\n"
+    )
+
+    @pytest.mark.parametrize(
+        "lower_import",
+        (
+            LOWER_IMPORT_FUNCTION,
+            LOWER_IMPORT_METHOD,
+        ),
+    )
+    def test_lower_imports(self, lower_import):
+        error = results(lower_import)
+        assert error == {"5:4: ROU107 Function imports should be at the top of the function"}
+
+    @pytest.mark.parametrize(
+        "upper_import",
+        (
+            UPPER_IMPORT_FUNCTION,
+            UPPER_IMPORT_METHOD,
+        ),
+    )
+    def test_upper_imports(self, upper_import):
+        error = results(upper_import)
+        assert error == set()
+
+
 class TestVisitor:
     def test_parse_to_string_warning(self):
         visitor = Visitor()

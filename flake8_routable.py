@@ -29,6 +29,7 @@ ROU102 = "ROU102 Strings should not span multiple lines except comments or docst
 ROU103 = "ROU103 Object does not have attributes in order"
 ROU104 = "ROU104 Multiple blank lines are not allowed after a non-section comment"
 ROU105 = "ROU105 Constants are not in order"
+ROU106 = "ROU106 Relative imports are not allowed"
 
 
 @dataclass
@@ -126,6 +127,9 @@ class Visitor(ast.NodeVisitor):
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         if node.module is not None and "tests" in node.module:
             self.errors.append((node.lineno, node.col_offset, ROU101))
+
+        if node.level > 0:
+            self.errors.append((node.lineno, node.col_offset, ROU106))
 
     def visit_Set(self, node: ast.Set) -> None:
         if not self._is_ordered(node.elts):
