@@ -417,11 +417,18 @@ class TestROU107:
 
     LOWER_IMPORT_METHOD = (
         "class Foo:\n"
-        "    def foo(self):\n"
-        '        """ This is a lovely docstring. """\n'
-        "        x = 4\n"
+        "    def assign_things(self):\n"
+        '        """\n'
+        "        Multi-line docstring\n"
+        "        is happening here\n"
+        '        """\n'
         "\n"
-        "        from bar import baz\n"
+        '        thing_levels = self.thing_settings and self.thing_settings.get("levels")\n'
+        "        if not thing_levels:\n"
+        "            thing_levels = []\n"
+        "\n"
+        "        # Internal imports\n"
+        "        from some.little.logic import thing\n"
     )
 
     LOWER_IMPORT_METHOD_NESTED_FUNC = (
@@ -457,7 +464,7 @@ class TestROU107:
 
     def test_lower_import_method(self):
         error = results(self.LOWER_IMPORT_METHOD)
-        assert error == {"6:8: ROU107 Inline function import is not at top of statement"}
+        assert error == {"13:8: ROU107 Inline function import is not at top of statement"}
 
     @pytest.mark.parametrize(
         "upper_import",

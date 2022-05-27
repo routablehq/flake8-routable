@@ -132,10 +132,9 @@ class Visitor(ast.NodeVisitor):
             if isinstance(body_node, ast.Expr) and i == 0:
                 continue
             # note we hit an import statement
-            elif isinstance(body_node, ast.ImportFrom):
-                if has_non_docstring_before_import:
-                    self.errors.append((body_node.lineno, body_node.col_offset, ROU107))
-                    break
+            elif isinstance(body_node, ast.ImportFrom) and has_non_docstring_before_import:
+                self.errors.append((body_node.lineno, body_node.col_offset, ROU107))
+                break
             else:
                 has_non_docstring_before_import = True
 
