@@ -445,11 +445,19 @@ class TestROU107:
         "        return bar(x)\n"
     )
 
+    UPPER_DOUBLE_IMPORT_METHOD = (
+        "def foo(self, bar):\n"
+        "\n"
+        "    # Internal imports\n"
+        "    from little.thing import BigThing\n"
+        "    from big.thing import LittleThing\n"
+    )
+
     UPPER_IMPORT_FUNCTION = (
         "def foo():\n" '    """ This is a lovely docstring. """\n' "    from bar import baz\n" "\n" "    x = 4\n"
     )
 
-    UPPER_IMPORT_METHOD = (
+    UPPER_IMPORT_METHOD_DOCSTRING = (
         "class Foo:\n"
         "    def foo(self):\n"
         '        """ This is a lovely docstring. """\n'
@@ -470,8 +478,9 @@ class TestROU107:
         "upper_import",
         (
             LOWER_IMPORT_METHOD_NESTED_FUNC,
+            UPPER_DOUBLE_IMPORT_METHOD,
             UPPER_IMPORT_FUNCTION,
-            UPPER_IMPORT_METHOD,
+            UPPER_IMPORT_METHOD_DOCSTRING,
         ),
     )
     def test_upper_imports(self, upper_import):
