@@ -424,6 +424,20 @@ class TestROU107:
         "        from bar import baz\n"
     )
 
+    LOWER_IMPORT_METHOD_NESTED_FUNC = (
+        "class Foo:\n"
+        "    def foo(self):\n"
+        '        """ This is a lovely docstring. """\n'
+        "        x = 4\n"
+        "\n"
+        "        def bar(y):\n"
+        "            from baz import qux\n"
+        "\n"
+        "            return y*qux(y)\n"
+        "\n"
+        "        return bar(x)\n"
+    )
+
     UPPER_IMPORT_FUNCTION = (
         "def foo():\n" '    """ This is a lovely docstring. """\n' "    from bar import baz\n" "\n" "    x = 4\n"
     )
@@ -437,20 +451,18 @@ class TestROU107:
         "        x = 4\n"
     )
 
-    @pytest.mark.parametrize(
-        "lower_import",
-        (
-            LOWER_IMPORT_FUNCTION,
-            LOWER_IMPORT_METHOD,
-        ),
-    )
-    def test_lower_imports(self, lower_import):
-        error = results(lower_import)
-        assert error == {"5:4: ROU107 Function imports should be at the top of the function"}
+    def test_lower_import_function(self):
+        error = results(self.LOWER_IMPORT_FUNCTION)
+        assert error == {"5:4: ROU107 Inline function import is not at top of statement"}
+
+    def test_lower_import_method(self):
+        error = results(self.LOWER_IMPORT_METHOD)
+        assert error == {"6:8: ROU107 Inline function import is not at top of statement"}
 
     @pytest.mark.parametrize(
         "upper_import",
         (
+            LOWER_IMPORT_METHOD_NESTED_FUNC,
             UPPER_IMPORT_FUNCTION,
             UPPER_IMPORT_METHOD,
         ),

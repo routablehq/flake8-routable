@@ -25,7 +25,7 @@ Here is a list of the rules supported by this Flake8 plugin:
 * `ROU104` - Multiple blank lines are not allowed after a non-section comment
 * `ROU105` - Constants are not in order
 * `ROU106` - Relative imports are not allowed
-* `ROU107` - Function imports should be at the top of the function
+* `ROU107` - Inline function import is not at top of statement
 
 ## Testing
 
