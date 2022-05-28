@@ -29,6 +29,8 @@ ROU102 = "ROU102 Strings should not span multiple lines except comments or docst
 ROU103 = "ROU103 Object does not have attributes in order"
 ROU104 = "ROU104 Multiple blank lines are not allowed after a non-section comment"
 ROU105 = "ROU105 Constants are not in order"
+ROU106 = "ROU106 Relative imports are not allowed"
+ROU107 = "ROU107 Inline function import is not at top of statement"
 
 
 @dataclass
@@ -123,9 +125,25 @@ class Visitor(ast.NodeVisitor):
         if None not in node.keys and not self._is_ordered(node.keys):
             self.errors.append((node.lineno, node.col_offset, ROU103))
 
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        has_non_docstring_before_import = False
+        for i, body_node in enumerate(node.body):
+            # ignore docstrings
+            if isinstance(body_node, ast.Expr) and i == 0:
+                continue
+            # note we hit an import statement
+            elif isinstance(body_node, ast.ImportFrom):
+                if has_non_docstring_before_import:
+                    self.errors.append((body_node.lineno, body_node.col_offset, ROU107))
+            else:
+                has_non_docstring_before_import = True
+
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         if node.module is not None and "tests" in node.module:
             self.errors.append((node.lineno, node.col_offset, ROU101))
+
+        if node.level > 0:
+            self.errors.append((node.lineno, node.col_offset, ROU106))
 
     def visit_Set(self, node: ast.Set) -> None:
         if not self._is_ordered(node.elts):
@@ -139,7 +157,7 @@ class FileTokenHelper:
         self.errors = []
         self._file_tokens = []
 
-    def vist(self, file_tokens: List[tokenize.TokenInfo]) -> None:
+    def visit(self, file_tokens: List[tokenize.TokenInfo]) -> None:
         self._file_tokens = file_tokens
 
         # run methods that generate errors using file tokens
@@ -317,7 +335,7 @@ class Plugin:
         visitor.finalize()
 
         file_token_helper = FileTokenHelper()
-        file_token_helper.vist(self._file_tokens)
+        file_token_helper.visit(self._file_tokens)
 
         for line, col, msg in chain(visitor.errors, file_token_helper.errors):
             yield line, col, msg, type(self)
