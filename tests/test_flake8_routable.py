@@ -489,9 +489,9 @@ class TestROU107:
 
 
 class TestROU108:
-    NOQA_SPECIFIC_RULES = "#  noqa: E731,E123"
-    NOQA_CATCHALL_CLEAN = "#  noqa"
-    NOQA_CATCHALL_DIRTY = "# noqa    "
+    NOQA_SPECIFIC_RULES = "def noop(self):  # noqa: E731,E123\n    return self"
+    NOQA_CATCHALL_CLEAN = "def noop(self):  # noqa\n    return self"
+    NOQA_CATCHALL_DIRTY = "def noop(self):  # noqa    \n    return self"
 
     @pytest.mark.parametrize(
         "noqa_comment",
@@ -502,7 +502,7 @@ class TestROU108:
     )
     def test_catchall_noqa(self, noqa_comment):
         error = results(noqa_comment)
-        assert error == {"1:0: ROU108 Catch-all noqa is not allowed"}
+        assert error == {"1:17: ROU108 Catch-all noqa is not allowed"}
 
     def test_noqa_rules(self):
         error = results(self.NOQA_SPECIFIC_RULES)
