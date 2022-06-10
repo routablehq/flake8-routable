@@ -31,7 +31,7 @@ repos:
         args: ['--add-ignore=D100,D101,D102,D103,D104,D105,D106,D107,D205,D400,D401']
 
   - repo: https://github.com/psf/black
-    rev: 22.1.0
+    rev: 22.3.0
     hooks:
       - id: black
         language_version: python3.8

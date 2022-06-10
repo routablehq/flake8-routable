@@ -111,6 +111,14 @@ class Visitor(ast.NodeVisitor):
         """Run methods after every node has been visited"""
         self._check_constant_order(self._constant_nodes)
 
+    def visit(self, node: ast.AST) -> Any:
+        method = "visit_" + node.__class__.__name__
+        visitor = getattr(self, method, None)
+        if not visitor:
+            return self.generic_visit(node)
+        visitor(node)
+        return self.generic_visit(node)
+
     def visit_Assign(self, node: ast.Assign) -> Any:
         target = node.targets[0]
         if isinstance(target, ast.Name) and target.id.isupper():
