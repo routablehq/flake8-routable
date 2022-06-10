@@ -31,6 +31,7 @@ ROU104 = "ROU104 Multiple blank lines are not allowed after a non-section commen
 ROU105 = "ROU105 Constants are not in order"
 ROU106 = "ROU106 Relative imports are not allowed"
 ROU107 = "ROU107 Inline function import is not at top of statement"
+ROU108 = "ROU108 Catch-all noqa is not allowed"
 
 
 @dataclass
@@ -164,6 +165,13 @@ class FileTokenHelper:
         self.lines_with_blank_lines_after_comments()
         self.lines_with_invalid_docstrings()
         self.lines_with_invalid_multi_line_strings()
+        self.lines_with_noqa_comments()
+
+    def lines_with_noqa_comments(self) -> None:
+        """Comments should not have the catch-all noqa on flake8"""
+        for i, (token_type, token_str, start_indices, _, __) in enumerate(self._file_tokens):
+            if token_type == tokenize.COMMENT and token_str.strip(" #") == "noqa":
+                self.errors.append((*start_indices, ROU108))
 
     def lines_with_blank_lines_after_comments(self) -> None:
         """

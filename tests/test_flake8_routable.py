@@ -488,6 +488,27 @@ class TestROU107:
         assert error == set()
 
 
+class TestROU108:
+    NOQA_SPECIFIC_RULES = "#  noqa: E731,E123"
+    NOQA_CATCHALL_CLEAN = "#  noqa"
+    NOQA_CATCHALL_DIRTY = "# noqa    "
+
+    @pytest.mark.parametrize(
+        "noqa_comment",
+        (
+            NOQA_CATCHALL_CLEAN,
+            NOQA_CATCHALL_DIRTY,
+        ),
+    )
+    def test_catchall_noqa(self, noqa_comment):
+        error = results(noqa_comment)
+        assert error == {"1:0: ROU108 Catch-all noqa is not allowed"}
+
+    def test_noqa_rules(self):
+        error = results(self.NOQA_SPECIFIC_RULES)
+        assert error == set()
+
+
 class TestVisitor:
     def test_parse_to_string_warning(self):
         visitor = Visitor()
