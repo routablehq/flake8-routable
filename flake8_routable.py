@@ -137,6 +137,7 @@ class Visitor(ast.NodeVisitor):
                     self.errors.append((body_node.lineno, body_node.col_offset, ROU107))
             else:
                 has_non_docstring_before_import = True
+        self.generic_visit(node)
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         if node.module is not None and "tests" in node.module:
