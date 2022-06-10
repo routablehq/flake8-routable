@@ -112,7 +112,7 @@ class Visitor(ast.NodeVisitor):
         self._check_constant_order(self._constant_nodes)
 
     def visit(self, node: ast.AST) -> Any:
-        method = 'visit_' + node.__class__.__name__
+        method = "visit_" + node.__class__.__name__
         visitor = getattr(self, method, None)
         if not visitor:
             return self.generic_visit(node)
