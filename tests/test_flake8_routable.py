@@ -495,7 +495,7 @@ class TestROU108:
 
     def test_model_subpackage_import(self):
         error = results("from app.models.subpackage import ModelA, ModelB")
-        assert error == {"1:0: ROU108 Import for model module instead of sub-packages"}
+        assert error == {"1:0: ROU108 Import from model module instead of sub-packages"}
 
     def test_model_module_import(self):
         error = results("from app.models import Model")
