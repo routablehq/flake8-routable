@@ -31,7 +31,7 @@ ROU104 = "ROU104 Multiple blank lines are not allowed after a non-section commen
 ROU105 = "ROU105 Constants are not in order"
 ROU106 = "ROU106 Relative imports are not allowed"
 ROU107 = "ROU107 Inline function import is not at top of statement"
-ROU108 = "ROU108 Import for model module instead of sub-packages"
+ROU108 = "ROU108 Import from model module instead of sub-packages"
 
 
 @dataclass
@@ -154,7 +154,6 @@ class Visitor(ast.NodeVisitor):
         if node.level > 0:
             self.errors.append((node.lineno, node.col_offset, ROU106))
 
-        print(node.module)
         if node.module is not None and "models." in node.module:
             self.errors.append((node.lineno, node.col_offset, ROU108))
 
