@@ -154,7 +154,7 @@ class Visitor(ast.NodeVisitor):
         if node.level > 0:
             self.errors.append((node.lineno, node.col_offset, ROU106))
 
-        if node.module is not None and "models." in node.module:
+        if node.module is not None and ".models." in node.module:
             self.errors.append((node.lineno, node.col_offset, ROU108))
 
     def visit_Set(self, node: ast.Set) -> None:
