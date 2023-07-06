@@ -89,6 +89,7 @@ class ImportVisitor(abc.ABC):
             return
 
         allow_subpackage_imports = [
+            "records.api",
             "django",
             "djmoney",
         ]
