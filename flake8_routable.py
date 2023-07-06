@@ -297,7 +297,7 @@ class FileTokenHelper:
         # last line number of the last statement (in case it spans multiple lines)
         last_stmt_line_no = None
 
-        for (token_type, token_str, start_indices, end_indices, line) in self._file_tokens:
+        for token_type, token_str, start_indices, end_indices, line in self._file_tokens:
             line_no = start_indices[0]
 
             if token_type in (tokenize.DEDENT, tokenize.INDENT, tokenize.NEWLINE, tokenize.NL):
