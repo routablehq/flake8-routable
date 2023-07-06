@@ -88,7 +88,12 @@ class ImportVisitor(abc.ABC):
         if not node.module:
             return
 
-        if node.module.startswith("django"):
+        allow_subpackage_imports = [
+            "django",
+            "djmoney",
+        ]
+
+        if any(node.module.startswith(allowed) for allowed in allow_subpackage_imports):
             return
 
         if ".models." in node.module:
