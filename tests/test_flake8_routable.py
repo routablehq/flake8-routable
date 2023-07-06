@@ -507,8 +507,7 @@ class TestROU108:
 
 
 class TestROU109:
-    ADD_MIGRATION = (
-    """class Migration(migrations.Migration):
+    ADD_MIGRATION = """class Migration(migrations.Migration):
         dependencies = []
         operations = [
             migrations.AddField(
@@ -517,10 +516,8 @@ class TestROU109:
                 field=models.TextField(blank=True, null=True),
             )
         ]"""
-    )
 
-    RENAME_MIGRATION = (
-    """class Migration(migrations.Migration):
+    RENAME_MIGRATION = """class Migration(migrations.Migration):
         dependencies = []
         operations = [
             migrations.RenameField(
@@ -529,7 +526,6 @@ class TestROU109:
                 new="field_two",
             )
         ]"""
-    )
 
     def test_correct_no_import_from_tests(self):
         errors = results(self.ADD_MIGRATION)
