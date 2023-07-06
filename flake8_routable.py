@@ -32,6 +32,7 @@ ROU105 = "ROU105 Constants are not in order"
 ROU106 = "ROU106 Relative imports are not allowed"
 ROU107 = "ROU107 Inline function import is not at top of statement"
 ROU108 = "ROU108 Import from model module instead of sub-packages"
+ROU109 = "ROU109 Disallow rename migrations"
 
 
 @dataclass
@@ -176,6 +177,7 @@ class FileTokenHelper:
         self.lines_with_blank_lines_after_comments()
         self.lines_with_invalid_docstrings()
         self.lines_with_invalid_multi_line_strings()
+        self.rename_migrations()
 
     def lines_with_blank_lines_after_comments(self) -> None:
         """
@@ -295,7 +297,7 @@ class FileTokenHelper:
         # last line number of the last statement (in case it spans multiple lines)
         last_stmt_line_no = None
 
-        for (token_type, token_str, start_indices, end_indices, line) in self._file_tokens:
+        for token_type, token_str, start_indices, end_indices, line in self._file_tokens:
             line_no = start_indices[0]
 
             if token_type in (tokenize.DEDENT, tokenize.INDENT, tokenize.NEWLINE, tokenize.NL):
@@ -329,6 +331,20 @@ class FileTokenHelper:
 
             # grouped tokens will no longer be a comment's prefix if they aren't new lines or indents (earlier clause)
             is_whitespace_prefix = False
+
+    def rename_migrations(self) -> None:
+        """Migrations should not allow renames."""
+        reported = set()
+        disallowed_migration_text = "migrations.RenameField"
+
+        for line_token in self._file_tokens:
+            if line_token.start[0] in reported:
+                # There could be many tokens on a same line.
+                continue
+
+            if disallowed_migration_text in line_token.line:
+                reported.add(line_token.start[0])
+                self.errors.append((*line_token.start, ROU109))
 
 
 class Plugin:
