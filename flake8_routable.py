@@ -1,6 +1,7 @@
 # Python imports
 import ast
 import importlib.metadata as importlib_metadata
+import re
 import tokenize
 import warnings
 from dataclasses import dataclass
@@ -33,6 +34,7 @@ ROU106 = "ROU106 Relative imports are not allowed"
 ROU107 = "ROU107 Inline function import is not at top of statement"
 ROU108 = "ROU108 Import from model module instead of sub-packages"
 ROU109 = "ROU109 Disallow rename migrations"
+ROU110 = "ROU110 Disallow .save() with no update_fields"
 
 
 @dataclass
@@ -178,6 +180,7 @@ class FileTokenHelper:
         self.lines_with_invalid_docstrings()
         self.lines_with_invalid_multi_line_strings()
         self.rename_migrations()
+        self.disallow_no_update_fields_save()
 
     def lines_with_blank_lines_after_comments(self) -> None:
         """
@@ -345,6 +348,33 @@ class FileTokenHelper:
             if disallowed_migration_text in line_token.line:
                 reported.add(line_token.start[0])
                 self.errors.append((*line_token.start, ROU109))
+
+    def disallow_no_update_fields_save(self) -> None:
+        """.save() must be called with update_fields."""
+        reported = set()
+        single_line_save = re.compile(r".+(\.save\(.*)\)")
+
+        for line_token in self._file_tokens:
+            if line_token.start[0] in reported:  # TODO: what does this mean?
+                # There could be many tokens on a same line.
+                continue
+
+            line = line_token.line
+
+            if not single_line_save.match(line):
+                # Skip lines that aren't a single line .save()
+                continue
+
+            if "update_fields=" in line:
+                # One line save, with update_fields is allowed
+                continue
+
+            if "# new model save" in line or "# serializer save" in line:
+                # Ignore lines with these comments, as they are valid
+                continue
+
+            reported.add(line_token.start[0])
+            self.errors.append((*line_token.start, ROU110))
 
 
 class Plugin:

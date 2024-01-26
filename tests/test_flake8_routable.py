@@ -536,6 +536,48 @@ class TestROU109:
         assert errors == {"4:12: ROU109 Disallow rename migrations"}
 
 
+class TestROU110:
+    SAVE_WITH_UPDATE_FIELDS = """from app.models import Model
+instance = Model(id="123", name="test")
+instance.save(update_fields=["id", "name"])
+"""
+
+    SAVE_WITHOUT_UPDATE_FIELDS = """from app.models import Model
+instance = Model(id="123", name="test")
+instance.save()
+instance.save(using="default")
+"""
+
+    SAVE_WITH_NEW_MODEL_SAVE_COMMENT = """from app.models import Model
+instance = Model(id="123", name="test")
+instance.save()  # new model save
+"""
+
+    SAVE_WITH_SERIALIZER_SAVE_COMMENT = """from app.models import Model
+instance = Model(id="123", name="test")
+instance.save()  # serializer save
+"""
+
+    def test_save_with_update_fields(self):
+        errors = results(self.SAVE_WITH_UPDATE_FIELDS)
+        assert errors == set()
+
+    def test_save_without_update_fields(self):
+        errors = results(self.SAVE_WITHOUT_UPDATE_FIELDS)
+        assert errors == {
+            "3:0: ROU110 Disallow .save() with no update_fields",
+            "4:0: ROU110 Disallow .save() with no update_fields",
+        }
+
+    def test_new_model_save_with_comment(self):
+        errors = results(self.SAVE_WITH_NEW_MODEL_SAVE_COMMENT)
+        assert errors == set()
+
+    def test_serializer_save_with_comment(self):
+        errors = results(self.SAVE_WITH_SERIALIZER_SAVE_COMMENT)
+        assert errors == set()
+
+
 class TestVisitor:
     def test_parse_to_string_warning(self):
         visitor = Visitor()
