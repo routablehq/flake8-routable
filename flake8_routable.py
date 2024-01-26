@@ -365,7 +365,7 @@ class FileTokenHelper:
                 # Skip lines that aren't a single line .save()
                 continue
 
-            if "update_fields=" in line:
+            if "update_fields" in line:
                 # One line save, with update_fields is allowed
                 continue
 
