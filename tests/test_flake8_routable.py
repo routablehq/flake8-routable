@@ -548,14 +548,9 @@ instance.save()
 instance.save(using="default")
 """
 
-    SAVE_WITH_NEW_MODEL_SAVE_COMMENT = """from app.models import Model
+    SAVE_WITH_COMMENT = """from app.models import Model
 instance = Model(id="123", name="test")
-instance.save()  # new model save
-"""
-
-    SAVE_WITH_SERIALIZER_SAVE_COMMENT = """from app.models import Model
-instance = Model(id="123", name="test")
-instance.save()  # serializer save
+instance.save()  # {comment}
 """
 
     def test_save_with_update_fields(self):
@@ -569,12 +564,20 @@ instance.save()  # serializer save
             "4:0: ROU110 Disallow .save() with no update_fields",
         }
 
-    def test_new_model_save_with_comment(self):
-        errors = results(self.SAVE_WITH_NEW_MODEL_SAVE_COMMENT)
-        assert errors == set()
-
-    def test_serializer_save_with_comment(self):
-        errors = results(self.SAVE_WITH_SERIALIZER_SAVE_COMMENT)
+    @pytest.mark.parametrize(
+        "comment",
+        [
+            "# new model save",
+            "# serializer save",
+            "# save extension",
+            "# ledger save",
+            "# file save",
+            "# not a model",
+            "# TODO: needs fix",
+        ],
+    )
+    def test_with_comment(self, comment):
+        errors = results(self.SAVE_WITH_COMMENT.format(comment=comment))
         assert errors == set()
 
 
