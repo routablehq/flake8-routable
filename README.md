@@ -26,6 +26,9 @@ Here is a list of the rules supported by this Flake8 plugin:
 * `ROU105` - Constants are not in order
 * `ROU106` - Relative imports are not allowed
 * `ROU107` - Inline function import is not at top of statement
+* `ROU108` - Import from model module instead of sub-packages
+* `ROU109` - Disallow rename migrations
+* `ROU111` - Disallow FeatureFlag creation in code
 
 ## Testing
 
