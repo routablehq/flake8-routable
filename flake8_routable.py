@@ -34,6 +34,7 @@ ROU106 = "ROU106 Relative imports are not allowed"
 ROU107 = "ROU107 Inline function import is not at top of statement"
 ROU108 = "ROU108 Import from model module instead of sub-packages"
 ROU109 = "ROU109 Disallow rename migrations"
+ROU110 = "ROU110 Disallow .save() with no update_fields"
 ROU111 = "ROU111 Disallow FeatureFlag creation in code"
 
 
@@ -180,6 +181,7 @@ class FileTokenHelper:
         self.lines_with_invalid_docstrings()
         self.lines_with_invalid_multi_line_strings()
         self.rename_migrations()
+        self.disallow_no_update_fields_save()
         self.disallow_feature_flag_creation()
 
     def lines_with_blank_lines_after_comments(self) -> None:
@@ -349,14 +351,51 @@ class FileTokenHelper:
                 reported.add(line_token.start[0])
                 self.errors.append((*line_token.start, ROU109))
 
+    def disallow_no_update_fields_save(self) -> None:
+        """.save() must be called with update_fields."""
+        reported = set()
+        single_line_save = re.compile(r".+(\.save\(.*)")
+        allowed_comments = [
+            "# TODO: needs fix",
+            "# file save",
+            "# form save",
+            "# ledger save",
+            "# multi-line with update_fields",
+            "# new model save",
+            "# not a model",
+            "# save extension",
+            "# serializer save",
+        ]
+
+        for line_token in self._file_tokens:
+            if line_token.start[0] in reported:
+                # There could be many tokens on a same line.
+                continue
+
+            line = line_token.line
+
+            if not single_line_save.match(line):
+                # Skip lines that don't match
+                continue
+
+            if "update_fields" in line:
+                # save, with update_fields is allowed
+                continue
+
+            if any(comment in line for comment in allowed_comments):
+                # Ignore lines with these comments, as they are valid
+                continue
+
+            reported.add(line_token.start[0])
+            self.errors.append((*line_token.start, ROU110))
+
     def disallow_feature_flag_creation(self) -> None:
         """We can not create FeatureFlags in code, they are cached on the request."""
         reported = set()
-        feature_flag_creation = re.compile(r".+(FeatureFlag\.objects\..*create)")
+        feature_flag_creation = re.compile(r"^.*?(FeatureFlag\.objects\..*create)")
         allowed_comments = [
             "# valid for legacy cross-border work",
             "# valid for management command",
-            "# valid for test usage",
         ]
 
         for line_token in self._file_tokens:
