@@ -396,7 +396,6 @@ class FileTokenHelper:
         allowed_comments = [
             "# valid for legacy cross-border work",
             "# valid for management command",
-            "# valid for test usage",
         ]
 
         for line_token in self._file_tokens:

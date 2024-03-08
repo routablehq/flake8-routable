@@ -638,7 +638,6 @@ FeatureFlag.objects.create(  {comment}
         [
             "# valid for legacy cross-border work",
             "# valid for management command",
-            "# valid for test usage",
         ],
     )
     def test_with_comment(self, comment):
