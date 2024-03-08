@@ -354,30 +354,32 @@ class FileTokenHelper:
     def disallow_no_update_fields_save(self) -> None:
         """.save() must be called with update_fields."""
         reported = set()
-        single_line_save = re.compile(r".+(\.save\(.*)\)")
+        single_line_save = re.compile(r".+(\.save\(.*)")
         allowed_comments = [
-            "# new model save",
-            "# serializer save",
-            "# save extension",
-            "# ledger save",
-            "# file save",
-            "# not a model",
             "# TODO: needs fix",
+            "# file save",
+            "# form save",
+            "# ledger save",
+            "# multiline with update_fields",
+            "# new model save",
+            "# not a model",
+            "# save extension",
+            "# serializer save",
         ]
 
         for line_token in self._file_tokens:
-            if line_token.start[0] in reported:  # TODO: what does this mean?
+            if line_token.start[0] in reported:
                 # There could be many tokens on a same line.
                 continue
 
             line = line_token.line
 
             if not single_line_save.match(line):
-                # Skip lines that aren't a single line .save()
+                # Skip lines that don't match
                 continue
 
             if "update_fields" in line:
-                # One line save, with update_fields is allowed
+                # save, with update_fields is allowed
                 continue
 
             if any(comment in line for comment in allowed_comments):
@@ -390,7 +392,7 @@ class FileTokenHelper:
     def disallow_feature_flag_creation(self) -> None:
         """We can not create FeatureFlags in code, they are cached on the request."""
         reported = set()
-        feature_flag_creation = re.compile(r".+(FeatureFlag\.objects\..*create)")
+        feature_flag_creation = re.compile(r"^.*?(FeatureFlag\.objects\..*create)")
         allowed_comments = [
             "# valid for legacy cross-border work",
             "# valid for management command",

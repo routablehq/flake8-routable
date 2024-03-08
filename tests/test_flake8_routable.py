@@ -542,6 +542,13 @@ instance = Model(id="123", name="test")
 instance.save(update_fields=["id", "name"])
 """
 
+    SAVE_MULTILINE_WITH_UPDATE_FIELDS_FLAG = """from app.models import Model
+instance = Model(id="123", name="test")
+instance.save(  # multiline with update_fields
+    update_fields=["id", "name"]
+)
+"""
+
     SAVE_WITHOUT_UPDATE_FIELDS = """from app.models import Model
 instance = Model(id="123", name="test")
 instance.save()
@@ -550,11 +557,15 @@ instance.save(using="default")
 
     SAVE_WITH_COMMENT = """from app.models import Model
 instance = Model(id="123", name="test")
-instance.save()  # {comment}
+instance.save()  {comment}
 """
 
     def test_save_with_update_fields(self):
         errors = results(self.SAVE_WITH_UPDATE_FIELDS)
+        assert errors == set()
+
+    def test_save__multiline_with_update_fields_flag(self):
+        errors = results(self.SAVE_MULTILINE_WITH_UPDATE_FIELDS_FLAG)
         assert errors == set()
 
     def test_save_without_update_fields(self):
@@ -567,18 +578,85 @@ instance.save()  # {comment}
     @pytest.mark.parametrize(
         "comment",
         [
-            "# new model save",
-            "# serializer save",
-            "# save extension",
-            "# ledger save",
-            "# file save",
-            "# not a model",
             "# TODO: needs fix",
+            "# file save",
+            "# form save",
+            "# ledger save",
+            "# new model save",
+            "# not a model",
+            "# save extension",
+            "# serializer save",
         ],
     )
     def test_with_comment(self, comment):
         errors = results(self.SAVE_WITH_COMMENT.format(comment=comment))
         assert errors == set()
+
+
+class TestROU111:
+    FEATURE_FLAG_CREATE = """from feature_config.models import FeatureFlag
+FeatureFlag.objects.create(company=company, feature_flag=flag)
+"""
+
+    FEATURE_FLAG_CREATE_MULTILINE = """from feature_config.models import FeatureFlag
+FeatureFlag.objects.create(
+    company=company, feature_flag=flag
+)
+"""
+
+    FEATURE_FLAG_GET_OR_CREATE = """from feature_config.models import FeatureFlag
+def method():
+    FeatureFlag.objects.get_or_create(company=company, feature_flag=flag)
+"""
+
+    FEATURE_FLAG_WITH_COMMENT = """from feature_config.models import FeatureFlag
+FeatureFlag.objects.create(  {comment}
+    company=company, feature_flag=flag
+)
+"""
+
+    def test_feature_flag_create(self):
+        errors = results(self.FEATURE_FLAG_CREATE)
+        assert errors == {
+            "2:0: ROU111 Disallow FeatureFlag creation in code",
+        }
+
+    def test_feature_flag_create_multiline(self):
+        errors = results(self.FEATURE_FLAG_CREATE_MULTILINE)
+        assert errors == {
+            "2:0: ROU111 Disallow FeatureFlag creation in code",
+        }
+
+    def test_feature_flag_get_or_create(self):
+        errors = results(self.FEATURE_FLAG_GET_OR_CREATE)
+        assert errors == {
+            "3:0: ROU111 Disallow FeatureFlag creation in code",
+        }
+
+    @pytest.mark.parametrize(
+        "comment",
+        [
+            "# valid for legacy cross-border work",
+            "# valid for management command",
+            "# valid for test usage",
+        ],
+    )
+    def test_with_comment(self, comment):
+        errors = results(self.FEATURE_FLAG_WITH_COMMENT.format(comment=comment))
+        assert errors == set()
+
+    @pytest.mark.parametrize(
+        "comment",
+        [
+            "# valid for something else",
+            " ",
+        ],
+    )
+    def test_with_invalid_comment(self, comment):
+        errors = results(self.FEATURE_FLAG_WITH_COMMENT.format(comment=comment))
+        assert errors == {
+            "2:0: ROU111 Disallow FeatureFlag creation in code",
+        }
 
 
 class TestVisitor:
