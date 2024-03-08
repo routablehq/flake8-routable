@@ -544,7 +544,7 @@ instance.save(update_fields=["id", "name"])
 
     SAVE_MULTILINE_WITH_UPDATE_FIELDS_FLAG = """from app.models import Model
 instance = Model(id="123", name="test")
-instance.save(  # multiline with update_fields
+instance.save(  # multi-line with update_fields
     update_fields=["id", "name"]
 )
 """
