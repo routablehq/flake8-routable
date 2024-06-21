@@ -36,6 +36,8 @@ ROU108 = "ROU108 Import from model module instead of sub-packages"
 ROU109 = "ROU109 Disallow rename migrations"
 ROU110 = "ROU110 Disallow .save() with no update_fields"
 ROU111 = "ROU111 Disallow FeatureFlag creation in code"
+ROU112 = "ROU112 Tasks mush have *args, **kwargs"
+ROU113 = "ROU113 Tasks can not have priority in the signature"
 
 
 @dataclass
@@ -183,6 +185,7 @@ class FileTokenHelper:
         self.rename_migrations()
         self.disallow_no_update_fields_save()
         self.disallow_feature_flag_creation()
+        self.tasks_without_args_and_kwargs()
 
     def lines_with_blank_lines_after_comments(self) -> None:
         """
@@ -415,6 +418,51 @@ class FileTokenHelper:
 
             reported.add(line_token.start[0])
             self.errors.append((*line_token.start, ROU111))
+
+    def tasks_without_args_and_kwargs(self) -> None:
+        """Don't allow tasks without args or kwargs."""
+        handler_start = False
+        in_task_definition = False
+        args_found = False
+        kwargs_found = False
+        last_star = -1
+        last_star_star = -1
+
+        for i, (token_type, token_str, start_indices, end_indices, line) in enumerate(self._file_tokens):
+            # Start of a contextmanager
+            if token_type == tokenize.OP and token_str == "@":
+                handler_start = True
+            # It is a shared_task
+            elif handler_start and token_type == tokenize.NAME and token_str == "shared_task":
+                in_task_definition = True
+
+            # Track * and ** positions
+            elif in_task_definition and token_type == tokenize.OP and token_str == "*":
+                last_star = i
+            elif in_task_definition and token_type == tokenize.OP and token_str == "**":
+                last_star_star = i
+
+            # Look for *args and **kwargs
+            elif in_task_definition and token_type == tokenize.NAME and token_str == "args" and last_star == i - 1:
+                args_found = True
+            elif (
+                in_task_definition and token_type == tokenize.NAME and token_str == "kwargs" and last_star_star == i - 1
+            ):
+                kwargs_found = True
+
+            # Check for priority in the signature
+            elif in_task_definition and token_type == tokenize.NAME and token_str == "priority":
+                self.errors.append((*start_indices, ROU113))
+
+            # End of method, are *args or **kwargs missing?
+            elif token_type == tokenize.OP and token_str == ":":
+                if in_task_definition and (not args_found or not kwargs_found):
+                    self.errors.append((*start_indices, ROU112))
+
+                handler_start = False
+                in_task_definition = False
+                args_found = False
+                kwargs_found = False
 
 
 class Plugin:
