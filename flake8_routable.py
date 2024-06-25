@@ -420,7 +420,7 @@ class FileTokenHelper:
             self.errors.append((*line_token.start, ROU111))
 
     def task_args_kwargs_and_priority(self) -> None:
-        """Don't allow tasks without args or kwargs."""
+        """Don't allow tasks without args or kwargs or with priority."""
         handler_start = False
         in_task_definition = False
         args_found = False
