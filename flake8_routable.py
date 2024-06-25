@@ -185,7 +185,7 @@ class FileTokenHelper:
         self.rename_migrations()
         self.disallow_no_update_fields_save()
         self.disallow_feature_flag_creation()
-        self.tasks_without_args_and_kwargs()
+        self.task_args_kwargs_and_priority()
 
     def lines_with_blank_lines_after_comments(self) -> None:
         """
@@ -419,7 +419,7 @@ class FileTokenHelper:
             reported.add(line_token.start[0])
             self.errors.append((*line_token.start, ROU111))
 
-    def tasks_without_args_and_kwargs(self) -> None:
+    def task_args_kwargs_and_priority(self) -> None:
         """Don't allow tasks without args or kwargs."""
         handler_start = False
         in_task_definition = False
