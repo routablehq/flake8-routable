@@ -427,6 +427,7 @@ class FileTokenHelper:
         kwargs_found = False
         last_star = -1
         last_star_star = -1
+        last_close_paren = -1
 
         for i, (token_type, token_str, start_indices, end_indices, line) in enumerate(self._file_tokens):
             # Start of a contextmanager
@@ -436,11 +437,13 @@ class FileTokenHelper:
             elif handler_start and token_type == tokenize.NAME and token_str == "shared_task":
                 in_task_definition = True
 
-            # Track * and ** positions
+            # Track *, **, and ) positions
             elif in_task_definition and token_type == tokenize.OP and token_str == "*":
                 last_star = i
             elif in_task_definition and token_type == tokenize.OP and token_str == "**":
                 last_star_star = i
+            elif in_task_definition and token_type == tokenize.OP and token_str == ")":
+                last_close_paren = i
 
             # Look for *args and **kwargs
             elif in_task_definition and token_type == tokenize.NAME and token_str == "args" and last_star == i - 1:
@@ -455,7 +458,7 @@ class FileTokenHelper:
                 self.errors.append((*start_indices, ROU113))
 
             # End of method, are *args or **kwargs missing?
-            elif token_type == tokenize.OP and token_str == ":":
+            elif token_type == tokenize.OP and token_str == ":" and last_close_paren == i - 1:
                 if in_task_definition and (not args_found or not kwargs_found):
                     self.errors.append((*start_indices, ROU112))
 
