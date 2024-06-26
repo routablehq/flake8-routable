@@ -30,6 +30,8 @@ Here is a list of the rules supported by this Flake8 plugin:
 * `ROU109` - Disallow rename migrations
 * `ROU110` - Disallow .save() with no update_fields
 * `ROU111` - Disallow FeatureFlag creation in code
+* `ROU112` - Tasks mush have *args, **kwargs
+* `ROU113` - Tasks can not have priority in the signature
 
 ## Testing
 

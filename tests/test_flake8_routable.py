@@ -658,6 +658,176 @@ FeatureFlag.objects.create(  {comment}
         }
 
 
+class TestROU112:
+    TASK_MULTILINE_WITH_ARGS_KWARGS = (
+        "\n"
+        "@shared_task\n"
+        "def task_method(\n"
+        "    field_1,\n"
+        "    field_2,\n"
+        "    *args,\n"
+        "    **kwargs,\n"
+        "):"
+        "    pass\n"
+        "\n"
+    )
+
+    TASK_SINGLELINE_WITH_ARGS_KWARGS = (
+        "\n" "@shared_task\n" "def task_method(field_1, field_2, *args, **kwargs):\n" "    pass\n" "\n"
+    )
+
+    TASK_MULTILINE_MISSING_ARGS = (
+        "\n"
+        "@shared_task\n"
+        "def task_method(\n"
+        "    field_1,\n"
+        "    field_2,\n"
+        "    **kwargs,\n"
+        "):"
+        "    pass\n"
+        "\n"
+    )
+
+    TASK_SINGLELINE_MISSING_ARGS = (
+        "\n" "@shared_task\n" "def task_method(field_1, field_2, **kwargs):\n" "    pass\n" "\n"
+    )
+
+    TASK_MULTILINE_MISSING_KWARGS = (
+        "\n"
+        "@shared_task\n"
+        "def task_method(\n"
+        "    field_1,\n"
+        "    field_2,\n"
+        "    *args,\n"
+        "):"
+        "    pass\n"
+        "\n"
+    )
+
+    TASK_SINGLELINE_MISSING_KWARGS = (
+        "\n" "@shared_task\n" "def task_method(field_1, field_2, *args):\n" "    pass\n" "\n"
+    )
+
+    TASK_MULTILINE_MISSING_ARGS_KWARGS = (
+        "\n" "@shared_task\n" "def task_method(\n" "    field_1,\n" "    field_2,\n" "):" "    pass\n" "\n"
+    )
+
+    TASK_SINGLELINE_MISSING_ARGS_KWARGS = "\n" "@shared_task\n" "def task_method(field_1, field_2):\n" "    pass\n" "\n"
+
+    @pytest.mark.parametrize(
+        "code",
+        (
+            TASK_MULTILINE_WITH_ARGS_KWARGS,
+            TASK_SINGLELINE_WITH_ARGS_KWARGS,
+        ),
+    )
+    def test_correct_signature(self, code):
+        errors = results(code)
+        assert errors == set()
+
+    @pytest.mark.parametrize(
+        ("code", "location"),
+        (
+            (TASK_MULTILINE_MISSING_ARGS, "7:1"),
+            (TASK_SINGLELINE_MISSING_ARGS, "3:43"),
+            (TASK_MULTILINE_MISSING_KWARGS, "7:1"),
+            (TASK_SINGLELINE_MISSING_KWARGS, "3:40"),
+            (TASK_MULTILINE_MISSING_ARGS_KWARGS, "6:1"),
+            (TASK_SINGLELINE_MISSING_ARGS_KWARGS, "3:33"),
+        ),
+    )
+    def test_incorrect_signature(self, code, location):
+        errors = results(code)
+        assert errors == {f"{location}: ROU112 Tasks mush have *args, **kwargs"}
+
+
+class TestROU113:
+    TASK_WITH_OUT_PRIORITY = (
+        "\n"
+        "@shared_task\n"
+        "def task_method(\n"
+        "    field_1,\n"
+        "    field_2,\n"
+        "    *args,\n"
+        "    **kwargs,\n"
+        "):"
+        "    pass\n"
+        "\n"
+    )
+
+    TASK_WITH_PRIORITY = (
+        "\n"
+        "@shared_task\n"
+        "def task_method(\n"
+        "    field_1,\n"
+        "    field_2,\n"
+        "    priority,\n"
+        "    *args,\n"
+        "    **kwargs,\n"
+        "):"
+        "    pass\n"
+        "\n"
+    )
+
+    TASK_WITH_PRIORITY_MISSING_ARGS = (
+        "\n"
+        "@shared_task\n"
+        "def task_method(\n"
+        "    field_1,\n"
+        "    field_2,\n"
+        "    priority,\n"
+        "    **kwargs,\n"
+        "):"
+        "    pass\n"
+        "\n"
+    )
+
+    TASK_WITH_PRIORITY_MISSING_KWARGS = (
+        "\n"
+        "@shared_task\n"
+        "def task_method(\n"
+        "    field_1,\n"
+        "    field_2,\n"
+        "    priority,\n"
+        "    *args,\n"
+        "):"
+        "    pass\n"
+        "\n"
+    )
+
+    @pytest.mark.parametrize(
+        "code",
+        (TASK_WITH_OUT_PRIORITY,),
+    )
+    def test_correct_signature(self, code):
+        errors = results(code)
+        assert errors == set()
+
+    @pytest.mark.parametrize(
+        ("code", "error"),
+        (
+            (TASK_WITH_PRIORITY, {"6:4: ROU113 Tasks can not have priority in the signature"}),
+            (
+                TASK_WITH_PRIORITY_MISSING_ARGS,
+                {
+                    "6:4: ROU113 Tasks can not have priority in the signature",
+                    "8:1: ROU112 Tasks mush have *args, **kwargs",
+                },
+            ),
+            (
+                TASK_WITH_PRIORITY_MISSING_KWARGS,
+                {
+                    "6:4: ROU113 Tasks can not have priority in the signature",
+                    "8:1: ROU112 Tasks mush have *args, **kwargs",
+                },
+            ),
+        ),
+    )
+    def test_incorrect_signature(self, code, error):
+        errors = results(code)
+        assert errors == error
+
+
 class TestVisitor:
     def test_parse_to_string_warning(self):
         visitor = Visitor()
