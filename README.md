@@ -32,6 +32,7 @@ Here is a list of the rules supported by this Flake8 plugin:
 * `ROU111` - Disallow FeatureFlag creation in code
 * `ROU112` - Tasks mush have *args, **kwargs
 * `ROU113` - Tasks can not have priority in the signature
+* `ROU114` - Prevent prefix "called_" for attributes of mock objects 
 
 ## Testing
 

@@ -38,6 +38,7 @@ ROU110 = "ROU110 Disallow .save() with no update_fields"
 ROU111 = "ROU111 Disallow FeatureFlag creation in code"
 ROU112 = "ROU112 Tasks mush have *args, **kwargs"
 ROU113 = "ROU113 Tasks can not have priority in the signature"
+ROU114 = "ROU114 prefix .called_ for attributes of mock objects"
 
 
 @dataclass
@@ -183,6 +184,7 @@ class FileTokenHelper:
         self.lines_with_invalid_docstrings()
         self.lines_with_invalid_multi_line_strings()
         self.rename_migrations()
+        self.disallow_called_prefix_in_unit_tests()
         self.disallow_no_update_fields_save()
         self.disallow_feature_flag_creation()
         self.task_args_kwargs_and_priority()
@@ -353,6 +355,18 @@ class FileTokenHelper:
             if disallowed_migration_text in line_token.line:
                 reported.add(line_token.start[0])
                 self.errors.append((*line_token.start, ROU109))
+
+    def disallow_called_prefix_in_unit_tests(self) -> None:
+        """.called_, .has_calls, .not_called should not be called in mocks"""
+        reported = set()
+
+        for token in self._file_tokens:
+            token_str = token.string
+            if token.type == tokenize.NAME and (
+                token_str.startswith("called_") or token_str in {"has_calls", "not_called"}
+            ):
+                reported.add(token.start[0])
+                self.errors.append((*token.start, ROU114))
 
     def disallow_no_update_fields_save(self) -> None:
         """.save() must be called with update_fields."""

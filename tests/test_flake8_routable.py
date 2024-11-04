@@ -873,6 +873,16 @@ class TestROU113:
         assert errors == error
 
 
+class TestROU114:
+    def test_prefix_usage(self):
+        errors = results("something_mock.called_once_with(test)")
+        assert errors == {"1:15: ROU114 prefix .called_ for attributes of mock objects"}
+
+    def test_with_correct_prefix_usage(self):
+        errors = results("something_mock.assert_called_once_with(test)")
+        assert errors == set()
+
+
 class TestVisitor:
     def test_parse_to_string_warning(self):
         visitor = Visitor()
