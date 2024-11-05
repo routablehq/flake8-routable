@@ -38,6 +38,7 @@ ROU110 = "ROU110 Disallow .save() with no update_fields"
 ROU111 = "ROU111 Disallow FeatureFlag creation in code"
 ROU112 = "ROU112 Tasks mush have *args, **kwargs"
 ROU113 = "ROU113 Tasks can not have priority in the signature"
+# TODO: Remove ROU114 once we upgrade to python 3.12 since it's handled automatically
 ROU114 = "ROU114 prefix .called_ for attributes of mock objects"
 
 
