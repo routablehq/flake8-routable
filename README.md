@@ -31,6 +31,9 @@ Here is a list of the rules supported by this Flake8 plugin:
 * `ROU111` - Disallow FeatureFlag creation in code
 * `ROU112` - Tasks mush have *args, **kwargs
 * `ROU113` - Tasks can not have priority in the signature
+* `ROU114` - Field default exists but db_default does not
+* `ROU115` - Field default and db_default do not match
+* `ROU116` - Field has both default and null set
 
 ## Testing
 

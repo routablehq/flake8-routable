@@ -11,7 +11,7 @@ class TestROU109:
                 name="swift_charge_option",
                 field=models.TextField(blank=True, null=True),
             )
-        ]"""  # noqa ROU102
+        ]"""
 
     RENAME_MIGRATION = """class Migration(migrations.Migration):
         dependencies = []
@@ -21,7 +21,7 @@ class TestROU109:
                 old="field_one",
                 new="field_two",
             )
-        ]"""  # noqa ROU102
+        ]"""
 
     def test_correct_no_import_from_tests(self):
         errors = results(self.ADD_MIGRATION)

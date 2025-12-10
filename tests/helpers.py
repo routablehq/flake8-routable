@@ -7,8 +7,8 @@ import tokenize
 from flake8_routable import Plugin
 
 
-def results(s):
+def results(s, filename="file.py"):
     return {
         "{}:{}: {}".format(*r)
-        for r in Plugin(ast.parse(s), list(tokenize.generate_tokens(io.StringIO(s).readline))).run()
+        for r in Plugin(ast.parse(s), list(tokenize.generate_tokens(io.StringIO(s).readline)), filename).run()
     }

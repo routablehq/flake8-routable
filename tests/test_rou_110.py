@@ -9,25 +9,25 @@ class TestROU110:
     SAVE_WITH_UPDATE_FIELDS = """from app.models import Model
 instance = Model(id="123", name="test")
 instance.save(update_fields=["id", "name"])
-"""  # noqa ROU102
+"""
 
     SAVE_MULTILINE_WITH_UPDATE_FIELDS_FLAG = """from app.models import Model
 instance = Model(id="123", name="test")
 instance.save(  # multi-line with update_fields
     update_fields=["id", "name"]
 )
-"""  # noqa ROU102
+"""
 
     SAVE_WITHOUT_UPDATE_FIELDS = """from app.models import Model
 instance = Model(id="123", name="test")
 instance.save()
 instance.save(using="default")
-"""  # noqa ROU102
+"""
 
     SAVE_WITH_COMMENT = """from app.models import Model
 instance = Model(id="123", name="test")
 instance.save()  {comment}
-"""  # noqa ROU102
+"""
 
     def test_save_with_update_fields(self):
         errors = results(self.SAVE_WITH_UPDATE_FIELDS)
