@@ -15,16 +15,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v3
+    - name: Check out repository
+      uses: actions/checkout@v6
+    - name: Set up Python 3.13
+      uses: actions/setup-python@v6
       with:
-        python-version: "3.11"
+        python-version: "3.13"
+    - name: Install and configure Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 2.2.1
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        virtualenvs-path: .venv
+        installer-parallel: true
     - name: Install dependencies
       run: |
-        pip install -r requirements-dev.txt
+        poetry install
     - name: Lint
-      uses: pre-commit/action@v3.0.0
+      uses: pre-commit/action@v3.0.1
     - name: Test with pytest
       run: |
+        source .venv/bin/activate
         pytest

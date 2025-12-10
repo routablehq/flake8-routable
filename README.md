@@ -7,13 +7,12 @@ Custom Flake8 plugins for Routable
 
 There are a lot of other Flake8 plugins already created by the Python community. Do your research and see if a plugin already exists before you build a new one.
 
-The Python environment used is `3.8.10`.
+The Python environment used is `3.13.x`.
 
 ### First Time Setup
 
 Before committing code for the first time run:
-1. `pip install -r requirements-dev.txt` and
-2. `pre-commit install`
+1. `poetry sync`
 
 ## Rules
 
@@ -41,4 +40,4 @@ Confirm this plugin is loaded into Flake8 via running `flake8 --version` and fin
 
 To run this plugin on your code use Flake8 as normal.
 
-If you'd like to run the unit tests included in this package enter the `tests/` folder and run `pytest`. Make sure `pytest` is installed as well.
+If you'd like to run the unit tests included in this package run `pytest`.

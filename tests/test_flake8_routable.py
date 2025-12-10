@@ -264,7 +264,6 @@ class TestROU103:
 
 class TestROU104:
     BLANK_LINE_AFTER_COMMENT = "# Setup\n\nUser = get_user_model()\n"
-    BLANK_LINES_AFTER_REVIEW_TIMESTAMP = "# 2020-04-06 - Needs review\n\n\nX = 4"
     BLANK_LINES_AFTER_SECTION = "# -------\n# Tests\n# -------\n\n\nX = 4"
     BLANK_LINES_AFTER_SUBSECTION = "# =======\n# Tests\n# =======\n\n\nX = 4"
     BLANK_LINES_BEFORE_DEDENT_SECTION = (
@@ -314,7 +313,6 @@ class TestROU104:
             BLANK_LINE_AFTER_COMMENT,
             BLANK_LINES_AFTER_SECTION,
             BLANK_LINES_AFTER_SUBSECTION,
-            BLANK_LINES_AFTER_REVIEW_TIMESTAMP,
             BLANK_LINES_BEFORE_DEDENT_SECTION,
             BLANK_LINES_BEFORE_DEDENT_STATEMENT,
         ),
@@ -515,7 +513,7 @@ class TestROU109:
                 name="swift_charge_option",
                 field=models.TextField(blank=True, null=True),
             )
-        ]"""
+        ]"""  # noqa ROU102
 
     RENAME_MIGRATION = """class Migration(migrations.Migration):
         dependencies = []
@@ -525,7 +523,7 @@ class TestROU109:
                 old="field_one",
                 new="field_two",
             )
-        ]"""
+        ]"""  # noqa ROU102
 
     def test_correct_no_import_from_tests(self):
         errors = results(self.ADD_MIGRATION)
@@ -540,25 +538,25 @@ class TestROU110:
     SAVE_WITH_UPDATE_FIELDS = """from app.models import Model
 instance = Model(id="123", name="test")
 instance.save(update_fields=["id", "name"])
-"""
+"""  # noqa ROU102
 
     SAVE_MULTILINE_WITH_UPDATE_FIELDS_FLAG = """from app.models import Model
 instance = Model(id="123", name="test")
 instance.save(  # multi-line with update_fields
     update_fields=["id", "name"]
 )
-"""
+"""  # noqa ROU102
 
     SAVE_WITHOUT_UPDATE_FIELDS = """from app.models import Model
 instance = Model(id="123", name="test")
 instance.save()
 instance.save(using="default")
-"""
+"""  # noqa ROU102
 
     SAVE_WITH_COMMENT = """from app.models import Model
 instance = Model(id="123", name="test")
 instance.save()  {comment}
-"""
+"""  # noqa ROU102
 
     def test_save_with_update_fields(self):
         errors = results(self.SAVE_WITH_UPDATE_FIELDS)
@@ -596,24 +594,24 @@ instance.save()  {comment}
 class TestROU111:
     FEATURE_FLAG_CREATE = """from feature_config.models import FeatureFlag
 FeatureFlag.objects.create(company=company, feature_flag=flag)
-"""
+"""  # noqa ROU102
 
     FEATURE_FLAG_CREATE_MULTILINE = """from feature_config.models import FeatureFlag
 FeatureFlag.objects.create(
     company=company, feature_flag=flag
 )
-"""
+"""  # noqa ROU102
 
     FEATURE_FLAG_GET_OR_CREATE = """from feature_config.models import FeatureFlag
 def method():
     FeatureFlag.objects.get_or_create(company=company, feature_flag=flag)
-"""
+"""  # noqa ROU102
 
     FEATURE_FLAG_WITH_COMMENT = """from feature_config.models import FeatureFlag
 FeatureFlag.objects.create(  {comment}
     company=company, feature_flag=flag
 )
-"""
+"""  # noqa ROU102
 
     def test_feature_flag_create(self):
         errors = results(self.FEATURE_FLAG_CREATE)
