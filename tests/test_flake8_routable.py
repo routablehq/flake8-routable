@@ -495,6 +495,18 @@ class TestROU108:
         error = results("from app.like_a_model.subpackage import ModelA, ModelB")
         assert error == set()
 
+    def test_django_model_subpackage_import_allowed(self):
+        error = results("from django.db.models.manager import RelatedManager")
+        assert error == set()
+
+    def test_djmoney_model_subpackage_import_allowed(self):
+        error = results("from djmoney.models.fields import CurrencyField")
+        assert error == set()
+
+    def test_records_api_pseudo_model_subpackage_import_allowed(self):
+        error = results("from records.api.models.payments import SwiftChargeOption")
+        assert error == set()
+
     def test_model_subpackage_import(self):
         error = results("from app.models.subpackage import ModelA, ModelB")
         assert error == {"1:0: ROU108 Import from model module instead of sub-packages"}

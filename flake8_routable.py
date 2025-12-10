@@ -1,4 +1,5 @@
 # Python imports
+import abc
 import ast
 import importlib.metadata as importlib_metadata
 import re
@@ -72,7 +73,46 @@ class BlankLinesAfterCommentConditions:
         )
 
 
-class Visitor(ast.NodeVisitor):
+class ImportVisitor(abc.ABC):
+    """Base class for checking imports with Flake8."""
+
+    def _check_relative_import(self, node: ast.ImportFrom):
+        """ROU106 - Relative imports are not allowed."""
+        if node.level > 0:
+            self.errors.append((node.lineno, node.col_offset, ROU106))
+
+    def _check_imports_from_tests(self, node: ast.ImportFrom):
+        """ROU101 - Import from a tests directory."""
+        if not node.module:
+            return
+
+        if "tests" in node.module:
+            self.errors.append((node.lineno, node.col_offset, ROU101))
+
+    def _check_subpackage_model_imports(self, node: ast.ImportFrom):
+        """ROU108 - Import from model module instead of sub-packages."""
+        if not node.module:
+            return
+
+        allow_subpackage_imports = [
+            "records.api",
+            "django",
+            "djmoney",
+        ]
+
+        if any(node.module.startswith(allowed) for allowed in allow_subpackage_imports):
+            return
+
+        if ".models." in node.module:
+            self.errors.append((node.lineno, node.col_offset, ROU108))
+
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+        self._check_relative_import(node)
+        self._check_imports_from_tests(node)
+        self._check_subpackage_model_imports(node)
+
+
+class Visitor(ImportVisitor, ast.NodeVisitor):
     """Linting errors that use the AST."""
 
     def __init__(self) -> None:
@@ -153,16 +193,6 @@ class Visitor(ast.NodeVisitor):
                     self.errors.append((body_node.lineno, body_node.col_offset, ROU107))
             else:
                 has_non_docstring_before_import = True
-
-    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
-        if node.module is not None and "tests" in node.module:
-            self.errors.append((node.lineno, node.col_offset, ROU101))
-
-        if node.level > 0:
-            self.errors.append((node.lineno, node.col_offset, ROU106))
-
-        if node.module is not None and ".models." in node.module:
-            self.errors.append((node.lineno, node.col_offset, ROU108))
 
     def visit_Set(self, node: ast.Set) -> None:
         if not self._is_ordered(node.elts):
