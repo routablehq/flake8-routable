@@ -4,4 +4,7 @@ extend-ignore = E203
 #  - https://www.flake8rules.com/rules/E203.html
 #  - https://black.readthedocs.io/en/stable/the_black_code_style.html#slices
 #  - Listed in pet-peeves, not an actual PEP 8 rule.
+
+jobs = auto
+max-complexity = 13
 max-line-length = 120

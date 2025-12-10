@@ -4,9 +4,10 @@ import importlib.metadata as importlib_metadata
 import re
 import tokenize
 import warnings
+from collections.abc import Generator
 from dataclasses import dataclass
 from itertools import chain
-from typing import Any, Generator, List, Tuple, Type, Union
+from typing import Any
 
 
 CLASS_AND_FUNC_TOKENS = (
@@ -20,7 +21,6 @@ MAX_BLANK_LINES_AFTER_COMMENT = 2
 IGNORABLE_COMMENTS = (
     "# ==",
     "# --",
-    "# 2020-04-06 - Needs review",
 )
 
 # Note: The rule should be what is wrong, not how to fix it
@@ -42,6 +42,7 @@ ROU113 = "ROU113 Tasks can not have priority in the signature"
 
 @dataclass
 class BlankLinesAfterCommentConditions:
+
     # Comment that is a section comment
     section_comment: bool = True
 
@@ -80,16 +81,16 @@ class Visitor(ast.NodeVisitor):
         self._constant_nodes = []
         self._last_constant_end_lineno = None
 
-    def _check_constant_order(self, group: List[ast.Assign]):
+    def _check_constant_order(self, group: list[ast.Assign]):
         group_strings = [node.targets[0].id.replace("_", " ") for node in group]
         if sorted(group_strings) != group_strings:
             self.errors.append((group[0].lineno, group[0].col_offset, ROU105))
 
-    def _is_ordered(self, values: List[Any]) -> bool:
+    def _is_ordered(self, values: list[Any]) -> bool:
         stringify = [self._parse_to_string(value).lower() for value in values]
         return sorted(stringify) == stringify
 
-    def _parse_Attribute(self, node: Union[ast.Attribute, ast.Name], s="") -> str:
+    def _parse_Attribute(self, node: ast.Attribute | ast.Name, s="") -> str:
         if isinstance(node, ast.Attribute):
             return self._parse_Attribute(node.value, s=f".{node.attr}{s}")
         return f"{self._parse_to_string(node)}{s}"
@@ -175,7 +176,7 @@ class FileTokenHelper:
         self.errors = []
         self._file_tokens = []
 
-    def visit(self, file_tokens: List[tokenize.TokenInfo]) -> None:
+    def visit(self, file_tokens: list[tokenize.TokenInfo]) -> None:
         self._file_tokens = file_tokens
 
         # run methods that generate errors using file tokens
@@ -343,7 +344,7 @@ class FileTokenHelper:
     def rename_migrations(self) -> None:
         """Migrations should not allow renames."""
         reported = set()
-        disallowed_migration_text = "migrations.RenameField"
+        disallowed_migration_text = "migrations.RenameField"  # noqa ROU109
 
         for line_token in self._file_tokens:
             if line_token.start[0] in reported:
@@ -474,11 +475,11 @@ class Plugin:
     name = __name__
     version = importlib_metadata.version(__name__)
 
-    def __init__(self, tree, file_tokens: List[tokenize.TokenInfo]) -> None:
+    def __init__(self, tree, file_tokens: list[tokenize.TokenInfo]) -> None:
         self._file_tokens = file_tokens
         self._tree = tree
 
-    def run(self) -> Generator[Tuple[int, int, str, Type["Plugin"]], None, None]:
+    def run(self) -> Generator[tuple[int, int, str, type["Plugin"]]]:
         visitor = Visitor()
         visitor.visit(self._tree)
         visitor.finalize()
