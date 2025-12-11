@@ -8,24 +8,24 @@ from tests.helpers import results
 class TestROU111:
     FEATURE_FLAG_CREATE = """from feature_config.models import FeatureFlag
 FeatureFlag.objects.create(company=company, feature_flag=flag)
-"""  # noqa ROU102
+"""
 
     FEATURE_FLAG_CREATE_MULTILINE = """from feature_config.models import FeatureFlag
 FeatureFlag.objects.create(
     company=company, feature_flag=flag
 )
-"""  # noqa ROU102
+"""
 
     FEATURE_FLAG_GET_OR_CREATE = """from feature_config.models import FeatureFlag
 def method():
     FeatureFlag.objects.get_or_create(company=company, feature_flag=flag)
-"""  # noqa ROU102
+"""
 
     FEATURE_FLAG_WITH_COMMENT = """from feature_config.models import FeatureFlag
 FeatureFlag.objects.create(  {comment}
     company=company, feature_flag=flag
 )
-"""  # noqa ROU102
+"""
 
     def test_feature_flag_create(self):
         errors = results(self.FEATURE_FLAG_CREATE)

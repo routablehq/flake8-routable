@@ -15,13 +15,13 @@ CLASS_AND_FUNC_TOKENS = (
     "def",
 )
 
-MAX_BLANK_LINES_AFTER_COMMENT = 2
-
 # comments to ignore, including section headers
 IGNORABLE_COMMENTS = (
     "# ==",
     "# --",
 )
+
+MAX_BLANK_LINES_AFTER_COMMENT = 2
 
 # Note: The rule should be what is wrong, not how to fix it
 ROU100 = "ROU100 Triple double quotes not used for docstring"
@@ -38,6 +38,142 @@ ROU110 = "ROU110 Disallow .save() with no update_fields"
 ROU111 = "ROU111 Disallow FeatureFlag creation in code"
 ROU112 = "ROU112 Tasks mush have *args, **kwargs"
 ROU113 = "ROU113 Tasks can not have priority in the signature"
+ROU114 = "ROU114 Field default exists but db_default does not"
+ROU115 = "ROU115 Field default and db_default do not match"
+ROU116 = "ROU116 Field has both default and null set"
+
+UNDEFINED = object()
+
+
+class LintClass:
+
+    def __init__(self, filename, file_tokens, errors) -> None:
+        self._filename = filename
+        self._file_tokens = file_tokens
+        self._errors = errors
+
+    def run(self) -> None:
+        raise NotImplementedError()
+
+
+class ModelFieldDefinitions(LintClass):
+
+    SWAP_VALUES = {
+        "list": "[]",
+        "dict": "{}",
+        "timezone.now": "Now()",
+    }
+
+    @dataclass
+    class PropertyInfo:
+        position = -1
+        position_end = True
+        value = UNDEFINED
+        token_str = ""
+
+        def __init__(self, *, token_str):
+            self.token_str = token_str
+
+        def reset(self):
+            self.position = -1
+            self.position_end = True
+            self.value = UNDEFINED
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.default_property = self.PropertyInfo(token_str="default")
+        self.db_default_property = self.PropertyInfo(token_str="db_default")
+        self.null_property = self.PropertyInfo(token_str="null")
+
+        self.properties = [
+            self.default_property,
+            self.db_default_property,
+            self.null_property,
+        ]
+
+    def run(self) -> None:
+        if "/migrations/" in self._filename or "/tests/" in self._filename:
+            return
+
+        in_model = False
+        field_start_indices = None
+        in_field_params = 0
+
+        for i, (token_type, token_str, start_indices, end_indices, line) in enumerate(self._file_tokens):
+            end_of_signature = False
+
+            if (
+                in_field_params == 0
+                and token_type == tokenize.NAME
+                and (token_str.startswith("Base") or token_str == "Model")
+                and not line.startswith("from")
+            ):
+                in_model = True
+                continue
+
+            if (
+                in_field_params == 0
+                and in_model is True
+                and token_type == tokenize.NAME
+                and token_str.endswith("Field")
+            ):
+                field_start_indices = start_indices
+                continue
+
+            if field_start_indices and token_type == tokenize.OP and token_str == "(":
+                in_field_params += 1
+                if in_field_params == 1:
+                    continue
+
+            if field_start_indices and token_type == tokenize.OP and token_str == ")":
+                if in_field_params > 1:
+                    in_field_params -= 1
+                else:
+                    end_of_signature = True
+
+            if end_of_signature:
+                self.handle_signature_end(field_start_indices)
+                in_model = True
+                in_field_params = 0
+                field_start_indices = None
+
+            elif in_field_params > 0:
+                self.update_properties(i, token_type, token_str, line)
+
+    def handle_signature_end(self, field_start_indices):
+        for property in self.properties:
+            property.value = self.SWAP_VALUES.get(property.value, property.value)
+
+            if self.default_property.value != UNDEFINED and self.db_default_property.value == UNDEFINED:
+                self._errors.append((*field_start_indices, ROU114))
+            elif self.default_property.value != self.db_default_property.value:
+                self._errors.append((*field_start_indices, ROU115))
+            if self.default_property.value != UNDEFINED and self.null_property.value == "True":
+                self._errors.append((*field_start_indices, ROU116))
+
+            for property in self.properties:
+                property.reset()
+
+    def update_properties(self, i, token_type, token_str, line) -> None:
+        for property in self.properties:
+            if token_type == tokenize.NAME and token_str == property.token_str:
+                property.position = i + 2
+                property.position_end = False
+            elif i >= property.position and not property.position_end:
+                if token_str == "uuid" and line.strip() == (
+                    "id = models.UUIDField(db_index=True, default=uuid.uuid4, editable=False, primary_key=True)"
+                ):
+                    property.position_end = True
+                    continue
+
+                if token_str in [",", "\n"]:
+                    property.position_end = True
+                    continue
+
+                if property.value == UNDEFINED:
+                    property.value = ""
+                property.value += token_str
 
 
 @dataclass
@@ -172,9 +308,10 @@ class Visitor(ast.NodeVisitor):
 class FileTokenHelper:
     """Linting errors that use file tokens."""
 
-    def __init__(self) -> None:
+    def __init__(self, filename) -> None:
         self.errors = []
         self._file_tokens = []
+        self._filename = filename
 
     def visit(self, file_tokens: list[tokenize.TokenInfo]) -> None:
         self._file_tokens = file_tokens
@@ -187,6 +324,7 @@ class FileTokenHelper:
         self.disallow_no_update_fields_save()
         self.disallow_feature_flag_creation()
         self.task_args_kwargs_and_priority()
+        ModelFieldDefinitions(self._filename, self._file_tokens, self.errors).run()
 
     def lines_with_blank_lines_after_comments(self) -> None:
         """
@@ -344,7 +482,7 @@ class FileTokenHelper:
     def rename_migrations(self) -> None:
         """Migrations should not allow renames."""
         reported = set()
-        disallowed_migration_text = "migrations.RenameField"  # noqa ROU109
+        disallowed_migration_text = "migrations.RenameField"
 
         for line_token in self._file_tokens:
             if line_token.start[0] in reported:
@@ -475,8 +613,9 @@ class Plugin:
     name = __name__
     version = importlib_metadata.version(__name__)
 
-    def __init__(self, tree, file_tokens: list[tokenize.TokenInfo]) -> None:
+    def __init__(self, tree, file_tokens: list[tokenize.TokenInfo], filename: str) -> None:
         self._file_tokens = file_tokens
+        self._filename = filename
         self._tree = tree
 
     def run(self) -> Generator[tuple[int, int, str, type["Plugin"]]]:
@@ -484,7 +623,7 @@ class Plugin:
         visitor.visit(self._tree)
         visitor.finalize()
 
-        file_token_helper = FileTokenHelper()
+        file_token_helper = FileTokenHelper(self._filename)
         file_token_helper.visit(self._file_tokens)
 
         for line, col, msg in chain(visitor.errors, file_token_helper.errors):
