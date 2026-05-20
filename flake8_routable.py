@@ -41,6 +41,7 @@ ROU113 = "ROU113 Tasks can not have priority in the signature"
 ROU114 = "ROU114 Field default exists but db_default does not"
 ROU115 = "ROU115 Field default and db_default do not match"
 ROU116 = "ROU116 Field has both default and null set"
+ROU117 = "ROU117 not using *_on_commit"
 
 UNDEFINED = object()
 
@@ -54,6 +55,22 @@ class LintClass:
 
     def run(self) -> None:
         raise NotImplementedError()
+
+
+class CeleryOnCommit(LintClass):
+    def run(self) -> None:
+        pre_token_type = None
+        pre_token_str = None
+        for i, (token_type, token_str, start_indices, end_indices, line) in enumerate(self._file_tokens):
+            if (
+                pre_token_type == tokenize.OP
+                and pre_token_str == "."
+                and token_type == tokenize.NAME
+                and token_str in ["delay", "apply_async", "send_task"]
+            ):
+                self._errors.append((*start_indices, ROU117))
+            pre_token_type = token_type
+            pre_token_str = token_str
 
 
 class ModelFieldDefinitions(LintClass):
@@ -325,6 +342,7 @@ class FileTokenHelper:
         self.disallow_feature_flag_creation()
         self.task_args_kwargs_and_priority()
         ModelFieldDefinitions(self._filename, self._file_tokens, self.errors).run()
+        CeleryOnCommit(self._filename, self._file_tokens, self.errors).run()
 
     def lines_with_blank_lines_after_comments(self) -> None:
         """
