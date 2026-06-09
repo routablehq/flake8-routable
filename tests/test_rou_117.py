@@ -76,9 +76,9 @@ class TestROU117:
     def test_not_using_on_commit(self):
         errors = results(FILE_WITHOUT_ON_COMMIT)
         assert errors == {
-            "1:8: ROU117 not using *_on_commit",
-            "2:8: ROU117 not using *_on_commit",
-            "3:7: ROU117 not using *_on_commit",
+            "1:8: ROU117 Not using *_on_commit",
+            "2:8: ROU117 Not using *_on_commit",
+            "3:7: ROU117 Not using *_on_commit",
         }
 
     def test_using_on_commit_multiline(self):
@@ -88,9 +88,9 @@ class TestROU117:
     def test_not_using_on_commit_multiline(self):
         errors = results(FILE_WITHOUT_ON_COMMIT_MULTILINE)
         assert errors == {
-            "1:8: ROU117 not using *_on_commit",
-            "7:8: ROU117 not using *_on_commit",
-            "12:7: ROU117 not using *_on_commit",
+            "1:8: ROU117 Not using *_on_commit",
+            "7:8: ROU117 Not using *_on_commit",
+            "12:7: ROU117 Not using *_on_commit",
         }
 
     def test_using_on_commit_attribute_assignment(self):
@@ -100,7 +100,7 @@ class TestROU117:
     def test_not_using_on_commit_attribute_assignment(self):
         errors = results(FILE_WITHOUT_ON_COMMIT_ATTRIBUTE_ASSIGNMENT)
         assert errors == {
-            "1:28: ROU117 not using *_on_commit",
-            "2:38: ROU117 not using *_on_commit",
-            "3:26: ROU117 not using *_on_commit",
+            "1:28: ROU117 Not using *_on_commit",
+            "2:38: ROU117 Not using *_on_commit",
+            "3:26: ROU117 Not using *_on_commit",
         }

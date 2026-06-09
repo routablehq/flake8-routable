@@ -34,6 +34,8 @@ Here is a list of the rules supported by this Flake8 plugin:
 * `ROU114` - Field default exists but db_default does not
 * `ROU115` - Field default and db_default do not match
 * `ROU116` - Field has both default and null set
+* `ROU117` - Not using *_on_commit
+* `ROU118` - No migrations.RemoveField
 
 ## Testing
 
