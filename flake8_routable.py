@@ -4,6 +4,7 @@ import importlib.metadata as importlib_metadata
 import re
 import tokenize
 import warnings
+from collections import deque
 from collections.abc import Generator
 from dataclasses import dataclass
 from itertools import chain
@@ -41,7 +42,8 @@ ROU113 = "ROU113 Tasks can not have priority in the signature"
 ROU114 = "ROU114 Field default exists but db_default does not"
 ROU115 = "ROU115 Field default and db_default do not match"
 ROU116 = "ROU116 Field has both default and null set"
-ROU117 = "ROU117 not using *_on_commit"
+ROU117 = "ROU117 Not using *_on_commit"
+ROU118 = "ROU118 No migrations.RemoveField"
 
 UNDEFINED = object()
 
@@ -71,6 +73,24 @@ class CeleryOnCommit(LintClass):
                 self._errors.append((*start_indices, ROU117))
             pre_token_type = token_type
             pre_token_str = token_str
+
+
+class MigrationsBlocks(LintClass):
+    def run(self) -> None:
+        pre_token_type = deque([None, None], maxlen=2)
+        pre_token_str = deque([None, None], maxlen=2)
+        for i, (token_type, token_str, start_indices, end_indices, line) in enumerate(self._file_tokens):
+            if (
+                pre_token_type[0] == tokenize.NAME
+                and pre_token_str[0] == "migrations"
+                and pre_token_type[1] == tokenize.OP
+                and pre_token_str[1] == "."
+                and token_type == tokenize.NAME
+                and token_str == "RemoveField"
+            ):
+                self._errors.append((*start_indices, ROU118))
+            pre_token_type.append(token_type)
+            pre_token_str.append(token_str)
 
 
 class ModelFieldDefinitions(LintClass):
@@ -343,6 +363,7 @@ class FileTokenHelper:
         self.task_args_kwargs_and_priority()
         ModelFieldDefinitions(self._filename, self._file_tokens, self.errors).run()
         CeleryOnCommit(self._filename, self._file_tokens, self.errors).run()
+        MigrationsBlocks(self._filename, self._file_tokens, self.errors).run()
 
     def lines_with_blank_lines_after_comments(self) -> None:
         """
