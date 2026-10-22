@@ -14,9 +14,9 @@ class TestROU100:
         "class Foo:\n" "    ''' Single triple quotes for a docstring explaining things? Oh no. '''\n" "    pass\n"
     )
 
-    CLASS_DOCSTRING_HASH = (
-        "class Foo:\n" "    # Hash mon? Not as a docstring, try again with triple double quotes\n" "    pass\n"
-    )
+    CLASS_HASH_COMMENT = "class Foo:\n" "    # Hash mon? Comments are allowed after a class\n" "    pass\n"
+
+    CLASS_SECTION_HASH_COMMENT = "class Foo:\n" "    # Properties\n" "\n" "    bar = 1\n"
 
     FUNC_DOCSTRING_TRIPLE_DOUBLE_QUOTES = (
         "def foo(x, y):\n"
@@ -39,9 +39,16 @@ class TestROU100:
         "    return x + y\n"
     )
 
-    FUNC_DOCSTRING_HASH = (
-        "def foo(x, y):\n"
-        "    # Hash mon? Not as a docstring, try again with triple double quotes\n"
+    FUNC_HASH_COMMENT = (
+        "def foo(x, y):\n" "    # Hash mon? Comments are allowed after a function\n" "    return x + y\n"
+    )
+
+    FUNC_HASH_COMMENT_MULTI_LINE = (
+        "def foo(\n"
+        "    one_really_long_argument,\n"
+        "    another_really_long_argument\n"
+        "):\n"
+        "    # Hash mon?\n"
         "    return x + y\n"
     )
 
@@ -53,7 +60,15 @@ class TestROU100:
         "    return y\n"
     )
 
-    METHOD_DOCSTRING_HASH = "class Bar:\n" "    def __init__(self, x):\n" "        # Hash mon?\n" "        self.x = x\n"
+    METHOD_HASH_COMMENT = "class Bar:\n" "    def __init__(self, x):\n" "        # Hash mon?\n" "        self.x = x\n"
+
+    CLASS_HASH_COMMENT_METHOD_DOCSTRING_TRIPLE_SINGLE_QUOTES = (
+        "class Bar:\n"
+        "    # Methods\n"
+        "    def __init__(self, x):\n"
+        "        ''' Single quotes?! '''\n"
+        "        self.x = x\n"
+    )
 
     METHOD_DOCSTRING_TRIPLE_DOUBLE_QUOTES = (
         "class Bar:\n" "   def __init__(self, x):\n" '       """ What a lovely docstring """\n' "       self.x = x\n"
@@ -75,24 +90,36 @@ class TestROU100:
         errors = results(doc_string)
         assert errors == set()
 
-    @pytest.mark.parametrize("doc_string", (CLASS_DOCSTRING_TRIPLE_SINGLE_QUOTES, CLASS_DOCSTRING_HASH))
-    def test_incorrect_docstring_class(self, doc_string):
-        errors = results(doc_string)
+    def test_incorrect_docstring_class(self):
+        errors = results(self.CLASS_DOCSTRING_TRIPLE_SINGLE_QUOTES)
         assert errors == {"2:4: ROU100 Triple double quotes not used for docstring"}
 
-    @pytest.mark.parametrize("doc_string", (FUNC_DOCSTRING_HASH, FUNC_DOCSTRING_TRIPLE_SINGLE_QUOTES))
-    def test_incorrect_docstring_function(self, doc_string):
-        errors = results(doc_string)
+    def test_incorrect_docstring_function(self):
+        errors = results(self.FUNC_DOCSTRING_TRIPLE_SINGLE_QUOTES)
         assert errors == {"2:4: ROU100 Triple double quotes not used for docstring"}
 
-    def test_ignore_hash_comment(self):
-        errors = results(self.FUNC_IGNORE_INLINE_HASH)
+    @pytest.mark.parametrize(
+        "code",
+        (
+            CLASS_HASH_COMMENT,
+            CLASS_SECTION_HASH_COMMENT,
+            FUNC_HASH_COMMENT,
+            FUNC_HASH_COMMENT_MULTI_LINE,
+            FUNC_IGNORE_INLINE_HASH,
+            METHOD_HASH_COMMENT,
+        ),
+    )
+    def test_ignore_hash_comment(self, code):
+        errors = results(code)
         assert errors == set()
 
-    @pytest.mark.parametrize("doc_string", (METHOD_DOCSTRING_TRIPLE_SINGLE_QUOTES, METHOD_DOCSTRING_HASH))
-    def test_incorrect_docstring_method(self, doc_string):
-        errors = results(doc_string)
+    def test_incorrect_docstring_method(self):
+        errors = results(self.METHOD_DOCSTRING_TRIPLE_SINGLE_QUOTES)
         assert errors == {"3:8: ROU100 Triple double quotes not used for docstring"}
+
+    def test_incorrect_docstring_method_after_class_hash_comment(self):
+        errors = results(self.CLASS_HASH_COMMENT_METHOD_DOCSTRING_TRIPLE_SINGLE_QUOTES)
+        assert errors == {"4:8: ROU100 Triple double quotes not used for docstring"}
 
     def test_incorrect_docstring_multi_line_function(self):
         errors = results(self.FUNC_DOCSTRING_TRIPLE_SINGLE_QUOTES_MULTI_LINE)

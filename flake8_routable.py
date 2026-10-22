@@ -471,11 +471,12 @@ class FileTokenHelper:
         classes, functions, and methods.
 
         To find a docstring iterate through a file, keep track of the line numbers of those
-        applicable statements, and if a comment happens the line after then you are looking
+        applicable statements, and if a string happens the line after then you are looking
         at a docstring.
 
-        Comments can happen on code immediately following a statement definition but this is
-        rare, unusual, and most likely warranting the inclusion of a docstring.
+        Hash comments immediately following a statement definition are allowed, since formatters
+        (e.g. ruff) remove blank lines at the start of a block, which puts section comments such as
+        ``# Properties`` directly after the ``class`` line.
         """
         is_whitespace_prefix = False
         is_inside_stmt = False
@@ -506,16 +507,8 @@ class FileTokenHelper:
             elif token_type == tokenize.OP and is_inside_stmt and token_str == ":":
                 last_stmt_line_no = line_no
                 is_inside_stmt = False
-            # encountered a hash comment that is a docstring
-            elif (
-                token_type == tokenize.COMMENT
-                and last_stmt_line_no is not None
-                and last_stmt_line_no + 1 == line_no
-                and is_whitespace_prefix
-            ):
-                self.errors.append((*start_indices, ROU100))
 
-            # grouped tokens will no longer be a comment's prefix if they aren't new lines or indents (earlier clause)
+            # grouped tokens will no longer be a string's prefix if they aren't new lines or indents (earlier clause)
             is_whitespace_prefix = False
 
     def rename_migrations(self) -> None:

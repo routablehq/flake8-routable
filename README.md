@@ -17,7 +17,7 @@ Before committing code for the first time run:
 ## Rules
 
 Here is a list of the rules supported by this Flake8 plugin:
-* `ROU100` - Triple double quotes not used for docstring
+* `ROU100` - Triple double quotes not used for docstring (hash comments after a `class` or `def` are allowed)
 * `ROU101` - Import from a tests directory
 * `ROU102` - Strings should not span multiple lines except comments or docstrings
 * `ROU103` - Object does not have attributes in order
